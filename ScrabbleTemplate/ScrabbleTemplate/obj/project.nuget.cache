@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "dgSpecHash": "RoqV+W+KW6YLbL4rB4Xg5cduBL/BuSn/GnKAnIVdiQwhbb6o5B2NlA6DRzgToqiIGflKMdUmuPftmJxuIXermw==",
+  "success": true,
+  "projectFilePath": "/Users/monicahardt/Library/CloudStorage/OneDrive-ITU/4_semester/Functional/Scrabble/ScrabbleTemplate/ScrabbleTemplate/ScrabbleTemplate.fsproj",
+  "expectedPackageFiles": [
+    "/Users/monicahardt/.nuget/packages/fparsec/1.1.1/fparsec.1.1.1.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/fsharp.core/7.0.200/fsharp.core.7.0.200.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/fsharp.quotations.evaluator/2.1.0/fsharp.quotations.evaluator.2.1.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/fspickler/5.3.2/fspickler.5.3.2.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/microsoft.netcore.platforms/1.1.0/microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/microsoft.netcore.targets/1.1.0/microsoft.netcore.targets.1.1.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.io/4.3.0/system.io.4.3.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.reflection/4.3.0/system.reflection.4.3.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.reflection.emit.ilgeneration/4.3.0/system.reflection.emit.ilgeneration.4.3.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.reflection.emit.lightweight/4.3.0/system.reflection.emit.lightweight.4.3.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.reflection.primitives/4.3.0/system.reflection.primitives.4.3.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.runtime/4.3.0/system.runtime.4.3.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.text.encoding/4.3.0/system.text.encoding.4.3.0.nupkg.sha512",
+    "/Users/monicahardt/.nuget/packages/system.threading.tasks/4.3.0/system.threading.tasks.4.3.0.nupkg.sha512"
+  ],
+  "logs": []
+}
