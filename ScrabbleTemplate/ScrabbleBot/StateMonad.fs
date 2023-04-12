@@ -48,13 +48,24 @@ module internal StateMonad
     let push : SM<unit> = 
         S (fun s -> Success ((), {s with vars = Map.empty :: s.vars}))
 
-    let pop : SM<unit> = failwith "Not implemented"      
+    let pop : SM<unit> = 
+         S (fun s -> Success ((), {s with vars = s.vars.Tail}))
 
-    let wordLength : SM<int> = failwith "Not implemented"      
+    let wordLength : SM<int> =
+        S (fun s -> Success (s.word.Length, s))
 
-    let characterValue (pos : int) : SM<char> = failwith "Not implemented"      
+    let characterValue (pos : int) : SM<char> =
+        S (fun s ->
+        match pos with
+        |pos when pos < s.word.Length -> Success (fst s.word.[pos],s)
+        |_ -> Failure (IndexOutOfBounds pos))
 
-    let pointValue (pos : int) : SM<int> = failwith "Not implemented"      
+    let pointValue (pos : int) : SM<int> =
+        S (fun s ->
+        match pos with
+        |pos when pos < s.word.Length -> Success (snd s.word.[pos],s)
+        |_ -> Failure (IndexOutOfBounds pos))
+
 
     let lookup (x : string) : SM<int> = 
         let rec aux =
@@ -70,5 +81,27 @@ module internal StateMonad
               | Some v -> Success (v, s)
               | None   -> Failure (VarNotFound x))
 
-    let declare (var : string) : SM<unit> = failwith "Not implemented"   
-    let update (var : string) (value : int) : SM<unit> = failwith "Not implemented"      
+    let declare (x : string) : SM<unit> =
+        S (fun s ->
+        match x with
+        |_ when s.vars.IsEmpty -> Failure (VarNotFound "The variable stack is empty")
+        |x when s.reserved.Contains x -> Failure (ReservedName x)
+        |_ when s.vars.[0].ContainsKey x -> Failure (VarExists x)
+        |_ -> Success((), {s with vars = Map [x,0] :: s.vars}))
+        
+        
+    let update (x: string) (v:int) : SM<unit> =
+        let rec aux (sVars: Map<string,int> list) (index: int) =
+            match sVars with
+            |[] -> None
+            |m :: ms ->
+                match Map.tryFind x m with //check if the string is there
+                |Some i -> Some index //passing the index with so we know which to update
+                |None -> aux ms (index+1)
+        S (fun s ->
+            match aux s.vars 0 with
+            | Some ind ->
+                let updated = List.mapi (fun i (m:Map<string,int>) -> if i = ind then m.Add(x,v) else m) s.vars
+                Success ((),{s with vars = updated})
+            | None   -> Failure (VarNotFound x))
+ 
