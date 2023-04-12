@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "3gRrgsg8rOt+/Wnpv17Q/wi8azpeWMV0/NAfFCyKYswXmpx4V6tNmWeoqbnvo1MtdnMjE+VJ0MNHNVoC+fp+JQ==",
+  "dgSpecHash": "JhlwyPCek4lY+1zHh9UhxTSwPGtPeXr2bwzCSHocFyfGlBmGSOtesvbYrqjrYvJ+W5VNmjioszKDJB+a3pvxIw==",
   "success": true,
-  "projectFilePath": "/Users/monicahardt/Library/CloudStorage/OneDrive-ITU/4_semester/Functional/Scrabble/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
+  "projectFilePath": "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
   "expectedPackageFiles": [
     "/Users/monicahardt/.nuget/packages/fparsec/1.1.1/fparsec.1.1.1.nupkg.sha512",
     "/Users/monicahardt/.nuget/packages/fsharp.core/7.0.200/fsharp.core.7.0.200.nupkg.sha512"

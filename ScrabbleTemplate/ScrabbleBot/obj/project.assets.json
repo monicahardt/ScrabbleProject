@@ -159,11 +159,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/monicahardt/Library/CloudStorage/OneDrive-ITU/4_semester/Functional/Scrabble/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
+      "projectUniqueName": "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
       "projectName": "ScrabbleBot",
-      "projectPath": "/Users/monicahardt/Library/CloudStorage/OneDrive-ITU/4_semester/Functional/Scrabble/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
+      "projectPath": "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
       "packagesPath": "/Users/monicahardt/.nuget/packages/",
-      "outputPath": "/Users/monicahardt/Library/CloudStorage/OneDrive-ITU/4_semester/Functional/Scrabble/ScrabbleTemplate/ScrabbleBot/obj/",
+      "outputPath": "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/monicahardt/.nuget/NuGet/NuGet.Config"
