@@ -1,13 +1,13 @@
 ﻿// Insert your MultiSet.fs file here. All modules must be internal
+//Implementation file
 
 module internal MultiSet
         
     type MultiSet<'a when 'a : comparison> = Multi of Map<'a,uint32>
     let empty = Multi Map.empty
     let isEmpty (Multi s) = s.IsEmpty
+    
     let size (Multi s) = Map.fold(fun acc x y -> acc + y) 0u s
-        //For understanding purposes: The below adds together all the values
-        //Map.fold (fun acc y x -> acc + x) 0u Map[(1,10u);(2,2u);(3,5u)]
         
     let contains a (Multi s) = s.ContainsKey a
     let numItems a (Multi s) =
@@ -36,25 +36,14 @@ module internal MultiSet
         
     let foldBack f (Multi s) acc  = Map.foldBack f s acc
         
-        //yellow exercises below
     let ofList lst = List.fold(fun acc x -> addSingle x acc) empty lst
-        
-    (*
-    let rec toList (Multi s) = ([], (Multi s)) ||> fold (fun acc x y ->
-        match y with
-        |1u -> x :: acc
-        |_ -> x :: toList (remove x 1u (Multi s)))
-    *)
       
     //creating a new list for every 'a in the map and then appending these lists together
     let toList (Multi s) = foldBack (fun x y acc -> List.init (int y) (fun t -> x) @ acc) (Multi s) []
           
-    //What happens with the b
     let map (f: 'a -> 'b) (Multi s) = fold(fun acc x y -> add (f x) y acc) empty (Multi s)
         
-        //let union (Multi s1) (Multi s2) = Map.fold(fun acc x y -> if contains x (Multi s2) then (if numItems x (Multi s2) > y then add x (numItems x (Multi s2)) acc else ) else add x y acc) empty s1
-        
-        //OBS THIS IS HOW TO PIPE MORE PARAMETERS
+    //||> is to pipe more parameters
     let union (Multi s1) (Multi s2) = (empty, s1) ||> Map.fold(fun acc x y ->
             let contains = contains x (Multi s2)
             match contains with
@@ -65,14 +54,13 @@ module internal MultiSet
             let numOfItemIn2 = numItems x (Multi s2) //if the item is now in the second then that just returns 0
             add x (numOfItemIn2 + y) acc)
         
-    //why is it b here again?
-    //let subtract (Multi s1) (Multi s2) = (s1, s2) ||> Map.fold(fun acc x y -> remove x y acc) //how do we change this to be MultiSet<'a>instead of Map<'a,uint32>
-    let subtract (Multi s1) (Multi s2) =  fold (fun acc x y -> remove x y acc) (Multi s1) (Multi s2)  //how do we change this to be MultiSet<'a>instead of Map<'a,uint32>
-
+    let subtract (Multi s1) (Multi s2) =  fold (fun acc x y -> remove x y acc) (Multi s1) (Multi s2)
+    
+   
     let intersection (Multi s1) (Multi s2) = (empty, (Multi s1)) ||> fold(fun acc x y ->
             let numIn2 = numItems x (Multi s2) //if the item is now in the second then that just returns 0
             match numIn2 with
-            |0u -> acc //if there are none in s2 we don't want it
+            |0u -> acc //if there are none in s2 we don't want it in the intersection
             |numIn2 when numIn2 < y -> add x numIn2 acc //if there are less of an item in s2 we want that number of it
             |_ -> add x y acc) //if there are more of an item in s2 we want to keep the number in s1
             

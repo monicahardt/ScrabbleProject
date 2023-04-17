@@ -1,8 +1,7 @@
 ﻿// Insert your MultiSet.fsi file here. All modules must be internal
+//Signature file. They specify entities to be represented and implemented in the library
 
 module internal MultiSet 
-//Signature file. They specify entities to be represented and implemented in the library.
-
     type MultiSet<'a when 'a : comparison>
     
     val empty : MultiSet<'a>
@@ -16,7 +15,6 @@ module internal MultiSet
     val removeSingle : 'a -> MultiSet<'a> -> MultiSet<'a>
     val fold : ('a -> 'b -> uint32 -> 'a) -> 'a -> MultiSet<'b> -> 'a
     val foldBack : ('a -> uint32 -> 'b -> 'b) -> MultiSet<'a> -> 'b -> 'b
-    //yellow exercises below
     val ofList : 'a list -> MultiSet<'a>
     val toList : MultiSet<'a> -> 'a list
     val map : ('a -> 'b) -> MultiSet<'a> -> MultiSet<'b>

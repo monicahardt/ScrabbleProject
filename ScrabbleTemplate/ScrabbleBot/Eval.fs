@@ -3,12 +3,11 @@
 module internal Eval
 
     open StateMonad
-
-    
     let binop f a b =
         a >>= fun x ->
             b >>= fun y ->
                 ret (f x y)
+                
     let add (a: SM<int>) (b: SM<int>) : SM<int> = binop (+) a b
     let div (a: SM<int>) (b: SM<int>) : SM<int> = binop (/) a b      
 
@@ -64,6 +63,7 @@ module internal Eval
 
     let isVowel (c:char) = "aeiouyæøåAEIOUYÆØÅ".Contains(c)
         
+    (* using bind to eval *)
     let rec arithEval a : SM<int> =
         match a with
         |N n -> ret n
@@ -85,10 +85,10 @@ module internal Eval
                     if y<>0 then ret (x%y) else fail DivisionByZero
         | CharToInt(c) ->
             charEval c >>= fun x ->
-                ret (int x ) //do we want to check charactervalue here hmmm what about this: - int '0'?
+                ret (int x ) 
     and charEval c : SM<char> =
         match c with
-        |C c -> ret c //what should this be
+        |C c -> ret c 
         |CV aEx ->
             arithEval aEx >>= fun x ->
                 characterValue x 
@@ -164,8 +164,6 @@ module internal Eval
                 pop
 
        
-(* Part 3 (Optional) *)
-
     type StateBuilder() =
 
         member this.Bind(f, x)    = f >>= x
@@ -175,7 +173,8 @@ module internal Eval
         member this.Combine(a, b) = a >>= (fun _ -> b)
         
     let prog = StateBuilder()
-        
+    
+    (* using computational exxpressions to eval *)
     let rec arithEval2 a = prog {
         match a with
         |N n -> return n
@@ -197,11 +196,11 @@ module internal Eval
              if y<>0 then return (x%y) else return! fail DivisionByZero
         | CharToInt(c) ->
             let! x = (charEval c)
-            return (int x ) //do we want to check charactervalue here hmmm what about this: - int '0'?
+            return (int x )
             }
     and charEval2 c : SM<char> = prog {
         match c with
-        |C c -> return c //what should this be
+        |C c -> return c
         |CV aEx ->
             let! x = (arithEval2 aEx)
             return! characterValue x     
@@ -267,8 +266,6 @@ module internal Eval
                     return! pop
     }
 
-(* Part 4 *) 
-
     type word = (char * int) list
     type squareFun = word -> int -> int -> Result<int, Error>
     type squareStmnt = Map<int, stm>
@@ -284,25 +281,36 @@ module internal Eval
         squares       : boardFun2
     }
 
+    (*
+    Takes a statement and returns a function that takes a word, an int and another int (acc) which is a squareFun
+    *)
     let stmntToSquareFun (stmnt: stm) (w:word) (pos: int) (acc: int) =
         let state = mkState [("_pos_", pos); ("_acc_", acc); ("_result_", 0)] w ["_pos_"; "_acc_";"_result_"]
         stmntEval2 stmnt >>>=
         lookup "_result_" |>
         evalSM state
-
  
+    (*
+    Takes a square statement and mapping each statement (value) in the map and applying the stmntToSquareFun to it
+    Hereby returning a square which is a map from int to squareFun
+    *)
     let stmntsToSquare (m: squareStmnt): square =
         Map.map(fun _ y -> (stmntToSquareFun y) ) m
 
     type boardFun = coord -> Result<squareFun option, Error> 
 
+    
+    (*
+    Takes a statement and a map and returns a function that takes coordinates
+    *)
     let stmntToBoardFun (stmnt: stm) (t: Map<int, 'a>) ((x,y):coord): Result<'a option, Error> =
         let state = mkState [("_x_", x); ("_y_", y); ("_result_", 0)] [] ["_x_"; "_y_";"_result_"]
         stmntEval2 stmnt >>>=
         lookup "_result_" >>= (fun x ->
-            match t.TryFind x with
-            |Some x -> ret (Some x)
-            |None -> ret None) |>
+            match t.TryFind x with //try to find the integer gotten from looking up _result_ in the map
+            |Some x -> ret (Some x) 
+            |None -> ret None)
+         |>
         evalSM state 
 
     let mkBoard (c:coord) (defaultSq:int) (boardStmnt: stm) (m:Map<int,squareStmnt>) : board =

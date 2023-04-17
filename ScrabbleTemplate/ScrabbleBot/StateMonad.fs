@@ -1,6 +1,4 @@
 ﻿// Insert your StateMonad.fs from Assignment 6 here. All modules must be internal.
-
-
 module internal StateMonad
 
     type Error = 
@@ -38,7 +36,6 @@ module internal StateMonad
                 | S g -> g s'
               | Failure err     -> Failure err)
 
-
     let ret (v : 'a) : SM<'a> = S (fun s -> Success (v, s))
     let fail err     : SM<'a> = S (fun s -> Failure err)
 
@@ -65,7 +62,6 @@ module internal StateMonad
         match pos with
         |pos when pos < s.word.Length -> Success (snd s.word.[pos],s)
         |_ -> Failure (IndexOutOfBounds pos))
-
 
     let lookup (x : string) : SM<int> = 
         let rec aux =
@@ -96,12 +92,12 @@ module internal StateMonad
             |[] -> None
             |m :: ms ->
                 match Map.tryFind x m with //check if the string is there
-                |Some i -> Some index //passing the index with so we know which to update
-                |None -> aux ms (index+1)
+                |Some _ -> Some index //the string was found. We pass the index at which the string was on to the next function. This is the ind in the below function
+                |None -> aux ms (index+1) //the string was not found try the next index
         S (fun s ->
             match aux s.vars 0 with
-            | Some ind ->
+            | Some ind -> //the ind here is the index found in the auxillary function
                 let updated = List.mapi (fun i (m:Map<string,int>) -> if i = ind then m.Add(x,v) else m) s.vars
-                Success ((),{s with vars = updated})
-            | None   -> Failure (VarNotFound x))
+                Success ((),{s with vars = updated}) //updating the state
+            | None   -> Failure (VarNotFound x)) //fail if the string was not at all in the state
  
