@@ -1,5 +1,6 @@
 ﻿namespace hej
 
+open MultiSet
 open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
 
@@ -37,7 +38,7 @@ module RegEx =
 
 module State = 
     // Make sure to keep your state localised in this module. It makes your life a whole lot easier.
-    // Currently, it only keeps track of your hand, your player numer, your board, and your dictionary,
+    // Currently, it only keeps track of your hand, your player number, your board, and your dictionary,
     // but it could, potentially, keep track of other useful
     // information, such as number of players, player turn, etc.
 
@@ -77,7 +78,9 @@ module Scrabble =
             match msg with
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
-                let st' = st // This state needs to be updated
+                let newHand = List.fold(fun hand x -> removeSingle (fst(snd x)) hand) st.hand ms
+                let st' = {st with hand = newHand} // This state needs to be updated
+                
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
@@ -93,6 +96,13 @@ module Scrabble =
 
 
         aux st
+    (*
+     let removeSingle a (Multi s) =
+        let found = s.TryFind a
+        match found with
+        |None -> (Multi s)
+        |_ -> remove a 1u (Multi s)
+        *)
 
     let startGame 
             (boardP : boardProg) 
