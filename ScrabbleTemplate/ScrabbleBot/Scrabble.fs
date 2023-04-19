@@ -57,6 +57,13 @@ module State =
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
 
+(* module moveMaker =
+    let makeMove (st: State.state) =
+        match st.occupiedSquares with
+        | st.occupiedSquares when st.occupiedSquares.IsEmpty -> 0  //first move
+             // Map.fold (fun acc x ->  ) Map.empty st.hand
+        |_ -> 0        *)
+
 module Scrabble =
     open System.Threading
 
