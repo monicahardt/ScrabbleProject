@@ -47,9 +47,10 @@ module State =
         dict          : ScrabbleUtil.Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
+        occupiedSquares : Map<coord, uint32>
     }
 
-    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h }
+    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; occupiedSquares = Map.empty }
 
     let board st         = st.board
     let dict st          = st.dict
@@ -66,6 +67,7 @@ module Scrabble =
 
             // remove the force print when you move on from manual input (or when you have learnt the format)
             forcePrint "Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
+            
             let input =  System.Console.ReadLine()
             let move = RegEx.parseMove input
 
@@ -74,15 +76,20 @@ module Scrabble =
 
             let msg = recv cstream
             debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
-
+            
             match msg with
+            
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
                 let newHand =
                     List.fold(fun hand x -> removeSingle (fst(snd x)) hand) st.hand ms |>
                     (fun removeTiles -> removeTiles, newPieces) ||>  // remove old tiles
                     List.fold(fun hand (id, numberOf) -> add id numberOf hand)  // add new ones
-                let st' = {st with hand = newHand} // This state needs to be updated
+                
+                let updateOccSquares =
+                    List.fold(fun squares (coord,(id,(_,_))) -> Map.add coord id squares) st.occupiedSquares ms // update used squares
+                
+                let st' = {st with hand = newHand; occupiedSquares = updateOccSquares} // This state needs to be update    aux st'
                 
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->

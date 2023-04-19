@@ -172,18 +172,18 @@ module internal Parser
     }
     
     // Default (unusable) board in case you are not implementing a parser for the DSL.
-    //let mkBoard : boardProg -> board = fun _ -> {center = (0,0); defaultSquare = Map.empty; squares = fun _ -> Success (Some Map.empty)}
+    // let mkBoard : boardProg -> board = fun _ -> {center = (0,0); defaultSquare = Map.empty; squares = fun _ -> Success (Some Map.empty)}
     
     let parseSquareProg (sqp: squareProg) =
         sqp |> Map.map(fun _ str -> run stmParse str |> getSuccess |> stmntToSquareFun)
 
-    //a board function takes:  coord -> Result<square option, Error>
-    //let stmntToBoardFun (stmnt: stmnt) (t: Map<int, 'a>) ((x,y):coord): Result<'a option, Error> =
-    //Therefore this with partial application should return a function that takes a coord
-    //using ||> to pass two arguments to the function stmntToBoardFun
+    // a board function takes:  coord -> Result<square option, Error>
+    // let stmntToBoardFun (stmnt: stmnt) (t: Map<int, 'a>) ((x,y):coord): Result<'a option, Error> =
+    // Therefore this with partial application should return a function that takes a coord
+    // using ||> to pass two arguments to the function stmntToBoardFun
     let parseBoardProg (s: string) (sqs: Map<int,square>): boardFun2 =
         let stm = run stmParse s |> getSuccess
-        (stm, sqs) ||> stmntToBoardFun
+        (stm, sqs) ||> stmntToBoardFun 
 
     let mkBoard (bp : boardProg) : board =
         let m = bp.squares |> Map.map(fun x y -> parseSquareProg y) 
