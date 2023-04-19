@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj": {}
+    "/Users/rakul/Desktop/SWU/4sem/funcpro/ass/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj": {}
   },
   "projects": {
-    "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj": {
+    "/Users/rakul/Desktop/SWU/4sem/funcpro/ass/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
+        "projectUniqueName": "/Users/rakul/Desktop/SWU/4sem/funcpro/ass/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
         "projectName": "ScrabbleBot",
-        "projectPath": "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
-        "packagesPath": "/Users/monicahardt/.nuget/packages/",
-        "outputPath": "/Users/monicahardt/Desktop/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/obj/",
+        "projectPath": "/Users/rakul/Desktop/SWU/4sem/funcpro/ass/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/ScrabbleBot.fsproj",
+        "packagesPath": "/Users/rakul/.nuget/packages/",
+        "outputPath": "/Users/rakul/Desktop/SWU/4sem/funcpro/ass/ScrabbleProject/ScrabbleTemplate/ScrabbleBot/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/monicahardt/.nuget/NuGet/NuGet.Config"
+          "/Users/rakul/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
