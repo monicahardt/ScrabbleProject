@@ -2,7 +2,7 @@
 //Implementation file
 
 module internal MultiSet
-        
+ 
     type MultiSet<'a when 'a : comparison> = Multi of Map<'a,uint32>
     let empty = Multi Map.empty
     let isEmpty (Multi s) = s.IsEmpty

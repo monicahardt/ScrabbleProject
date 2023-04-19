@@ -4,11 +4,34 @@
     <projectFile>ScrabbleTemplate/ScrabbleTemplate.fsproj</projectFile>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="453b20ad-bf55-4e9a-9312-75325b2fdd4a" name="Changes" comment="" />
+    <list default="true" id="453b20ad-bf55-4e9a-9312-75325b2fdd4a" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.ScrabbleTemplate/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ScrabbleTemplate/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleBot/MultiSet.fs" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleBot/MultiSet.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleBot/bin/Debug/net7.0/ScrabbleBot.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleBot/bin/Debug/net7.0/ScrabbleBot.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleBot/bin/Debug/net7.0/ScrabbleBot.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleBot/bin/Debug/net7.0/ScrabbleBot.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/ref/ScrabbleBot.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/ref/ScrabbleBot.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/refint/ScrabbleBot.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleBot/obj/Debug/net7.0/refint/ScrabbleBot.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/Dictionary.fs" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/Dictionary.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/Dictionary.fsi" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/Dictionary.fsi" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/Program.fs" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/Program.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleBot.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleBot.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleBot.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleBot.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleTemplate.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleTemplate.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleTemplate.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/bin/Debug/net7.0/ScrabbleTemplate.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/ScrabbleTemplate.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/ScrabbleTemplate.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/ScrabbleTemplate.fsproj.AssemblyReference.cache" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/ScrabbleTemplate.fsproj.AssemblyReference.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/ScrabbleTemplate.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/ScrabbleTemplate.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/refint/ScrabbleTemplate.dll" beforeDir="false" afterPath="$PROJECT_DIR$/ScrabbleTemplate/obj/Debug/net7.0/refint/ScrabbleTemplate.dll" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/ebab5691593140ff9a52907bc20b201120c00/40/425cafe1/DebugPrint.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -19,23 +42,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "rider.external.source.directories": [
-      "/Users/monicahardt/Library/Application Support/JetBrains/Rider2022.3/resharper-host/DecompilerCache",
-      "/Users/monicahardt/Library/Application Support/JetBrains/Rider2022.3/resharper-host/SourcesCache",
-      "/Users/monicahardt/.local/share/Symbols/src"
+  &quot;keyToStringList&quot;: {
+    &quot;rider.external.source.directories&quot;: [
+      &quot;/Users/monicahardt/Library/Application Support/JetBrains/Rider2022.3/resharper-host/DecompilerCache&quot;,
+      &quot;/Users/monicahardt/Library/Application Support/JetBrains/Rider2022.3/resharper-host/SourcesCache&quot;,
+      &quot;/Users/monicahardt/.local/share/Symbols/src&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="ScrabbleTemplate" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="$PROJECT_DIR$/ScrabbleTemplate/bin/Release/net6.0/ScrabbleTemplate" />
@@ -76,7 +99,10 @@
       <workItem from="1681191744206" duration="62000" />
       <workItem from="1681287606689" duration="302000" />
       <workItem from="1681288002229" duration="5767000" />
-      <workItem from="1681747864885" duration="3790000" />
+      <workItem from="1681747864885" duration="4543000" />
+      <workItem from="1681808575785" duration="979000" />
+      <workItem from="1681817239420" duration="5855000" />
+      <workItem from="1681884792393" duration="4486000" />
     </task>
     <servers />
   </component>

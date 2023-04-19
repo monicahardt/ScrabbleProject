@@ -7,3 +7,4 @@ type Dict
     val lookup : string -> Dict -> bool
     val step : char -> Dict -> (bool * Dict) option
 
+//kan du høre os???// ci kvi kan godt høre dig lol
