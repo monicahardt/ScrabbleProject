@@ -78,6 +78,49 @@ module Algorithm =
     let getListIdsFromHand (st: State.state) =
         toList st.hand
     
+
+
+
+    let firstMove (st: State.state) (pieces: Map<uint32,tile>) = 
+        let handList = getListIdsFromHand st
+
+        let rec aux (i: int)  =  
+            let handWithoutCharWeAreAt = removeSingle handList.[i] st.hand
+            let firstCharStepped = step (getCharFromId pieces handList.[i]) st.dict
+            let result = []
+
+            match firstCharStepped with
+                |Some(b,d) -> 
+                    result @ [handList.[i]]
+                    let rec lookForWord (dictionary: Dict) (MS: MultiSet<uint32> ) =
+                        MultiSet.fold(fun acc id _ ->
+                            match (step (getCharFromId pieces id) dictionary) with
+                            |Some(b,dict) ->
+                                acc @ [id]
+                                let updatedHand = removeSingle id handWithoutCharWeAreAt
+                                lookForWord dict updatedHand
+                                
+                            |None -> acc
+                        
+                            ) result MS
+                            
+                    lookForWord d handWithoutCharWeAreAt
+                        
+                |None -> []
+
+
+            aux i+1
+
+        aux 0                                      
+            
+
+
+
+
+
+
+
+        aux 0
     
     let rec makeInputCharList (acc:char list) (myMoveList: (uint32*bool) list) (pieces: Map<uint32,tile>) (st: State.state) (wordFound: bool) =
         match myMoveList with
@@ -122,7 +165,7 @@ module Algorithm =
                            isDone <- true
                            forcePrint  (sprintf "a word ends here %b \n" isDone)
                            acc @ [id, b] //a word ends here we add it to myMovesList and we are done?
-                       |false ->
+                        |false ->
                            forcePrint "no word ends here but there is a path \n"
                            let newHand = removeSingle id myHand //removes the used tile from the hand
                            let newAcc = acc @ [id, b] //no word ends here we add it to myMovesList since there is a path
@@ -278,7 +321,7 @@ module Scrabble =
         let handSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty hand
        
         
-        (*)
+        
         //testing with always getting letters for the word NO
         //testtiles
         
