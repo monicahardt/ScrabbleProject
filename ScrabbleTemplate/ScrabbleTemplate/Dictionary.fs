@@ -77,7 +77,6 @@ let rec insert (s: string) (dict: Dict) =
 
    
 let step (c: char) (dict: Dict) =
-    debugPrint (sprintf "Step was called with char %c \n" c)
     match dict with
      //if we reach a node and the nodes dictionary contains the char then there is a valid path. The boolean lets us know if a word ends
     |Node (_,d) ->
