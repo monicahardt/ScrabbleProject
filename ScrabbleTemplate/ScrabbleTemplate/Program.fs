@@ -18,7 +18,7 @@ let spawnMultiples name dict bot =
 
 [<EntryPoint>]
 let main argv =
-    ScrabbleUtil.DebugPrint.toggleDebugPrint false // Change to false to supress debug output
+    ScrabbleUtil.DebugPrint.toggleDebugPrint true // Change to false to supress debug output
 
     System.Console.BackgroundColor <- System.ConsoleColor.White
     System.Console.ForegroundColor <- System.ConsoleColor.Black
@@ -35,9 +35,12 @@ let main argv =
 //    let board      = ScrabbleUtil.HoleBoard.holeBoard ()
 //    let board      = ScrabbleUtil.InfiniteHoleBoard.infiniteHoleBoard ()
 
-    let words     = readLines "../../../Dictionaries/English.txt"
+    //let words     = readLines "../../../Dictionaries/English.txt" //RIDER VERSION
+    let words     = readLines "ScrabbleTemplate/ScrabbleTemplate/Dictionaries/English.txt" // VSCODE 
+    // To run, navigate to ScrabbleProject and run the following cmd:
+    // dotnet run --project ScrabbleTemplate/ScrabbleTemplate
 
-    let handSize   = 2u
+    let handSize   = 4u
     let timeout    = None
     let tiles      = ScrabbleUtil.English.tiles 1u
     let seed       = None
