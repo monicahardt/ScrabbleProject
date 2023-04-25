@@ -118,72 +118,77 @@ module Algorithm =
 
     let firstMove1 (st: State.state) (pieces: Map<uint32,tile>): Map<uint32, (uint32 list) list> = 
         let handList = getListIdsFromHand st
-        let (resultMap: Map<uint32, (uint32 list) list>) = Map.empty //first our map is empty
+        //let (resultMap: Map<uint32, (uint32 list) list>) = Map.empty //first our map is empty
 
         //outer recursion should recurse over the hand
-        let rec aux (i: int) (auxMap: Map<uint32,(uint32 list) list>) =
-            let charWeAreAt = handList.[i]
-            
-            debugPrint (sprintf "the char we are checking is %d \n" charWeAreAt) 
-            let handWithoutCharWeAreAt = removeSingle handList.[i] st.hand
-            let firstCharStepped = step (getCharFromId pieces handList.[i]) st.dict
-            
-            match firstCharStepped with
-                |Some(b,d) -> //this should always happen
-                    //adding the first id to the list result
-                    debugPrint "Found the first char \n"
-                    let map = Map.add charWeAreAt [[]] auxMap
-                        
-                    //recursive function start
-                    let rec lookForWord (dictionary: Dict) (MS: MultiSet<uint32>) (listOfPossibleWords: (uint32 list) list) =
-                        debugPrint "******NEW RECURSION***** \n"
+        let rec aux (i: int) (auxMap: Map<uint32,(uint32 list) list>) = 
 
-                      
-                        //folding over the rest of the multiset
-                        MultiSet.fold(fun (acc: (uint32 list) list) id _ ->
-                            debugPrint (sprintf "folding over the char with id %d \n" id)
-                            List.fold(fun _ lst -> 
- 
-                                    List.fold(fun acc id-> debugPrint (id.ToString() + "\n" )) () lst
-                            ) () acc
-                           
-                            match (step (getCharFromId pieces id) dictionary) with
-                            |Some(b,dict) ->
-                                let updatedAcc = acc.[i] @ [id]  //there was a path to this id so we add it to the foldList
-                                     
-                                let updatedHand = removeSingle id MS
-                                debugPrint (sprintf "there was a path to the char with id %d \n" id)
-                                debugPrint (sprintf "printing size of the hand we are sending on: %d \n" (size updatedHand))
-                                MultiSet.fold(fun acc id _ -> debugPrint (sprintf "Element in hand: %d \n" id)) () updatedHand
-                    
-                                if b then
-                                    debugPrint "a word has ended \n"
-                                    
-                                    (acc @ [updatedAcc])
-                                 else 
-                                    lookForWord dict updatedHand (acc @ [updatedAcc])
+            if(i < 4) then
+                let charWeAreAt = handList.[i]
+                debugPrint (sprintf ("aux running again the char is now %c \n" )(getCharFromId pieces handList.[i])) 
+                debugPrint (sprintf "the char we are checking is %d \n" charWeAreAt) 
+                let handWithoutCharWeAreAt = removeSingle handList.[i] st.hand
+                let firstCharStepped = step (getCharFromId pieces handList.[i]) st.dict
+                
+                match firstCharStepped with
+                    |Some(b,d) -> //this should always happen
+                        //adding the first id to the list result
+                        debugPrint "Found the first char \n"
+                        let map = Map.add charWeAreAt [] auxMap
+                            
+                        //recursive function start
+                        let rec lookForWord (dictionary: Dict) (MS: MultiSet<uint32>) (listOfPossibleWords: (uint32 list) list) =
+                            debugPrint "******NEW RECURSION***** \n"
+                        
+                            //folding over the rest of the multiset
+                            MultiSet.fold(fun (acc: (uint32 list) list) id _ ->
+                                debugPrint (sprintf "folding over the char with id %d \n" id)
                                 
-                            |None ->
-                                debugPrint (sprintf "there was not a path to the char with id %d \n" id)
-                                acc
-                            ) listOfPossibleWords MS //for each fold we get a list of "words". Some ending and some dont for know
                         
-                    //recursive function end
-                    //calling the recursive function
-                    
-                    let resultFromLookForWord = lookForWord d handWithoutCharWeAreAt (map.[charWeAreAt])
-                    let map = resultMap.Add(charWeAreAt, resultFromLookForWord)
-                    
-                    
-                    //after the fold we want to call the recursive aux function I think?
-                    aux (i+1) map 
+                                match (step (getCharFromId pieces id) dictionary) with
+                                |Some(b,dict) ->
+                                    debugPrint"Yoooooooooooo"
+                                    let updatedAcc = [id]  //there was a path to this id so we add it to the foldList
+                                        
+                                    let updatedHand = removeSingle id MS
+                                    debugPrint (sprintf "there was a path to the char with id %d \n" id)
+                                    debugPrint (sprintf "printing size of the hand we are sending on: %d \n" (size updatedHand))
+                                    MultiSet.fold(fun acc id _ -> debugPrint (sprintf "Element in hand: %d \n" id)) () updatedHand
                         
-                |None -> 
-                    debugPrint "Some wierd shit happened \n"
-                    failwith "NOOOO"
-          
-        aux 0 resultMap                                    
-            
+                                    if b then
+                                        debugPrint "a word has ended \n"
+                                        (acc @ [updatedAcc])
+                                    else 
+                                        lookForWord dict updatedHand (acc @ [updatedAcc])
+                                    
+                                |None ->
+                                    debugPrint (sprintf "there was not a path to the char with id %d \n" id)
+                                    acc
+                            ) listOfPossibleWords MS |> (fun x-> 
+                                                                debugPrint "********A fold is complete. Aka a recursion is done******** \n" 
+                                                                x)
+
+                            
+
+                            //for each fold we get a list of "words". Some ending and some dont for know
+                            
+                        //recursive function end
+                        //calling the recursive function
+                        
+                        let resultFromLookForWord = lookForWord d handWithoutCharWeAreAt (map.[charWeAreAt])
+                        let map = auxMap |> Map.add charWeAreAt resultFromLookForWord
+                        
+                        //after the fold we want to call the recursive aux function I think?
+                        aux (i+1) map 
+                            
+                    |None -> 
+                        debugPrint "Some wierd shit happened \n"
+                        failwith "NOOOO"
+         
+            else
+                auxMap
+        aux 0 Map.empty                                    
+           
 
 
 
@@ -220,10 +225,21 @@ module Scrabble =
           
             *)
 
-            let result = firstMove1 st pieces 
-            Map.fold(fun _ id lst -> forcePrint (sprintf "%d" id) ) () result
+            let resultMap = firstMove1 st pieces 
+
+            Map.fold(fun _ id lst -> forcePrint (sprintf "printing a list %d \n" id) ) () resultMap
+
+            Map.fold(fun _ id outerlst ->  
+                debugPrint (sprintf "Printing list from id %c \n" (getCharFromId pieces id)) 
+                debugPrint "Printing elements of list \n"
+                List.fold(fun acc x -> 
+
+                    List.fold(fun acc id -> forcePrint (string (getCharFromId pieces id) + ", ")) () x
+                ) () outerlst
             
-            debugPrint ("printing the size of the list" + result.Count.ToString())
+             ) () resultMap
+            
+            debugPrint ("printing the size of the map " + resultMap.Count.ToString())
           
             
            
