@@ -236,17 +236,36 @@ module Scrabble =
             let playInputList = findPossibleMoves st pieces |> validateMove st pieces |> createInputMove1 st pieces
             List.fold(fun acc id -> debugPrint (id.ToString())) () playInputList
 
-            let lst = makeCoords true (0,0) (playInputList.Length)
+            let listOfCoords = makeCoords true (0,0) (playInputList.Length)
+            let listOfTiles = getTileFromListIds pieces playInputList
             
             debugPrint "PRINTING COORDINATES LIST \n"
             List.fold(fun acc coor -> debugPrint (sprintf "Printing coord (%d %d) \n" (fst coor) (snd coor))) () (makeCoords true (0,0) (playInputList.Length))
             debugPrint "****************** \n"
 
-            List.fold(fun acc str -> debugPrint (sprintf "Printing tile %s \n" str)) () (getTileFromListIds pieces playInputList)
+            List.fold(fun acc str -> debugPrint (sprintf "Printing tile %s \n" str)) () (listOfTiles)
+    
+            (* (<x-coordinate> <y-coordinate> <piece id><character><point-value> )*) // 
+            //let inputString (coord: (int * int) list) (tile: string list) = 
+                //List.fold(fun acc coor -> acc + "(" + (fst coor)) "" coord
+            // x+1::xs
 
-            (*(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*)
-            //let inputString = 
+            let coordAndTile (coords: (int * int) list) (tiles: string list) =
+                let rec addCoordAndTile (coord: (int * int) list) (tile: string list) (acc: string)=
+                    match (coord, tile) with
+                    | (c::cs, t::ts) -> 
+                        let newString = "(" + (string (fst c)) + " " + (string (snd c)) + " " + t + ") " 
+                        let newAcc = acc + newString
+                        addCoordAndTile cs ts newAcc
+                    | _ -> acc
+                addCoordAndTile coords tiles ""
+                    
+            let inputString = coordAndTile listOfCoords listOfTiles
+            debugPrint ("String from coordAndTile: " + inputString + "\n")
+
+                
             
+
             (* 
             
             let resultMap = findPossibleMoves st pieces 
