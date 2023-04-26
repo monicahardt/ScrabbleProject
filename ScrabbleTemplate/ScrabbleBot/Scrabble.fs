@@ -56,14 +56,16 @@ module State =
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
         occupiedSquares : Map<coord, uint32>
+        nextTile : ((uint32 * coord) * bool)
     }
 
-    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; occupiedSquares = Map.empty }
+    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; occupiedSquares = Map.empty; nextTile = ((100u, (0,0)), true)}
     let board st         = st.board
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
     let occupiedSquares st          = st.occupiedSquares
+    let nextTile st = st.nextTile
 
 module Algorithm =
     open Dictionary
@@ -96,13 +98,13 @@ module Algorithm =
         let rec aux (acc: (int*int) list) i = 
             if(i < lengthOfWordToPlay) then
                 if playHorizontal then
+                    let newAcc = (i, snd startCoord) :: acc
+                    aux newAcc (i+1)
+
+                else
                     let newCoord = ((fst startCoord), i)
                     //debugPrint (sprintf "made a new coord: x: %d y: %d \n" (fst newCoord) (snd newCoord))
                     let newAcc = (newCoord) :: acc
-                    aux newAcc (i+1)
-    
-                else
-                    let newAcc = (i, snd startCoord) :: acc
                     aux newAcc (i+1)
                 
             else acc
@@ -122,44 +124,44 @@ module Algorithm =
                 auxMap 
             else 
                 let charWeAreAt = handIds.[i]
-                debugPrint (sprintf ("aux running again the char is now %c \n" )(getCharFromId pieces handIds.[i])) 
-                debugPrint (sprintf "the char we are checking is %d \n" charWeAreAt) 
+                //debugPrint (sprintf ("aux running again the char is now %c \n" )(getCharFromId pieces handIds.[i])) 
+                //debugPrint (sprintf "the char we are checking is %d \n" charWeAreAt) 
                 let handWithoutCharWeAreAt = removeSingle handIds.[i] st.hand
                 let firstCharStepped = step (getCharFromId pieces handIds.[i]) st.dict
                 
                 match firstCharStepped with
                     |Some(b,d) -> //this should always happen
                         //adding the first id to the list result
-                        debugPrint "Found the first char \n"
+                        //debugPrint "Found the first char \n"
                         let map = Map.add charWeAreAt [charWeAreAt] auxMap
                             
                         //recursive function start
                         let rec lookForWord (dictionary: Dict) (MS: MultiSet<uint32>) (listOfPossibleWords: (uint32 list*bool)) =
-                            debugPrint "******NEW RECURSION***** \n"
+                            //debugPrint "******NEW RECURSION***** \n"
                         
                             //folding over the rest of the multiset
                             MultiSet.fold(fun (acc: (uint32 list * bool)) id _ ->
                                 if (snd acc) then acc else
 
-                                debugPrint (sprintf "folding over the char with id %d \n" id)
+                                //debugPrint (sprintf "folding over the char with id %d \n" id)
                                 match (step (getCharFromId pieces id) dictionary) with
                                 |Some(b,dict) ->
                                     //let updatedAcc = (List.rev (id :: (fst (acc)))) //there was a path to this id so we add it to the foldList
                                     let updatedHand = removeSingle id MS
                                     
-                                    debugPrint (sprintf "there was a path to the char with id %d \n" id)
-                                    debugPrint (sprintf "printing size of the hand we are sending on: %d \n" (size updatedHand))
+                                    //debugPrint (sprintf "there was a path to the char with id %d \n" id)
+                                    //debugPrint (sprintf "printing size of the hand we are sending on: %d \n" (size updatedHand))
                                    
-                                    if b then debugPrint "a word has ended \n"  else debugPrint "continuing"
+                                    //if b then debugPrint "a word has ended \n"  else debugPrint "continuing"
                             
                                     let updatedAccList = ((id :: (fst (acc)))) 
                                     lookForWord dict updatedHand (updatedAccList,b)
 
                                 |None ->
-                                    debugPrint (sprintf "there was not a path to the char with id %d \n" id)
+                                    //debugPrint (sprintf "there was not a path to the char with id %d \n" id)
                                     acc
                             ) listOfPossibleWords MS |> (fun x-> 
-                                                                debugPrint "********A fold is complete. Aka a recursion is done******** \n" 
+                                                                //debugPrint "********A fold is complete. Aka a recursion is done******** \n" 
                                                                 x) 
                         
                         //first call to lookForWord
@@ -175,6 +177,14 @@ module Algorithm =
         //first call to aux with i being 0 and our map being empty
         aux 0 Map.empty                                    
 
+
+    let firstFunction(st: State.state) (pieces: Map<uint32, tile>) =
+        if (fst (fst st.nextTile)) = 100u then 
+            debugPrint "This is the first move"
+            findPossibleMoves st pieces
+        else 
+            findPossibleMoves st pieces
+            
 
 // ------------ MOVE ------------
     let validateMove (st: State.state) (pieces: Map<uint32,tile>)  (resultMap: Map<uint32, uint32 list>)= 
@@ -233,30 +243,8 @@ module Scrabble =
         let rec aux (st : State.state) =
             Print.printHand pieces (State.hand st)
 
-            let findMap = findPossibleMoves st pieces 
-
-            let validateMap =
-                debugPrint "checking the order of the first map \n" 
-                Map.fold(fun acc id lst ->
-                    //List.fold(fun acc id -> debugPrint (sprintf "id: %d" id + "\n")) () lst
-                    debugPrint (sprintf "Printing id from a list: %d \n" id)
-                ) () findMap
-
-                validateMove st pieces  findMap
-                
-            let create = 
-                debugPrint "checking the order of the second map \n" 
-                Map.fold(fun acc id lst ->
-                    //List.fold(fun acc id -> debugPrint (sprintf "id: %d" id + "\n")) () lst
-                    debugPrint (sprintf "Printing id from a list: %d \n" id)
-                ) () findMap
-               
-                createInputMove1 st pieces validateMap
-
-            let playInputList =
-                debugPrint "checking the order of the third list \n" 
-                List.fold(fun acc id -> debugPrint (sprintf "id: %d" id + "\n")) () create
-                create
+            let playInputList = 
+                findPossibleMoves st pieces |> validateMove st pieces |> createInputMove1 st pieces
 
             debugPrint "*****THE WORD WE WANT TO PLAY IS ***** \n"
             List.fold(fun acc id -> debugPrint ((string (getCharFromId pieces id)))) () playInputList
@@ -264,18 +252,7 @@ module Scrabble =
 
             let listOfCoords = makeCoords true (0,0) (playInputList.Length)
             let listOfTiles = getTileFromListIds pieces playInputList
-            
-            debugPrint "PRINTING COORDINATES LIST \n"
-            List.fold(fun acc coor -> debugPrint (sprintf "Printing coord (%d %d) \n" (fst coor) (snd coor))) () (makeCoords true (0,0) (playInputList.Length))
-            debugPrint "****************** \n"
-
-            List.fold(fun acc str -> debugPrint (sprintf "Printing tile %s \n" str)) () (listOfTiles)
-    
-            (* (<x-coordinate> <y-coordinate> <piece id><character><point-value> )*) // 
-            //let inputString (coord: (int * int) list) (tile: string list) = 
-                //List.fold(fun acc coor -> acc + "(" + (fst coor)) "" coord
-            // x+1::xs
-
+        
             let coordAndTile (coords: (int * int) list) (tiles: string list) =
                 let rec addCoordAndTile (coord: (int * int) list) (tile: string list) (acc: string)=
                     match (coord, tile) with
@@ -285,40 +262,19 @@ module Scrabble =
                         addCoordAndTile cs ts newAcc
                     | _ -> acc
                 addCoordAndTile coords tiles ""
-                    
-            let inputString = coordAndTile listOfCoords listOfTiles
-            debugPrint ("String from coordAndTile: " + inputString + "\n")
 
-                
+            debugPrint "***** OCCUPIED SQUARES ****** \n"    
+            Map.fold(fun acc key value -> debugPrint ("Key: "+ (string (key)) + " Value: "+ (string (value)) + "\n")) () st.occupiedSquares
             
-
-            (* 
-            
-            let resultMap = findPossibleMoves st pieces 
-            let validStrings = validateMove resultMap pieces st
-             
-            List.fold(fun _ element -> debugPrint (element + " \n" )) () validStrings
-                
-            Map.fold(fun _ id lst -> forcePrint (sprintf "printing a list %d \n" id) ) () resultMap
-
-            Map.fold(fun acc id lst -> 
-                debugPrint (sprintf "Folding over list belonging to id %d \n" id)
-                List.fold(fun acc id -> forcePrint (string (getCharFromId pieces id))) () lst
-                debugPrint ("\n ***** \n")
-            ) () resultMap
-            
-            debugPrint ("printing the size of the map " + resultMap.Count.ToString())
-            *)
 
             // remove the force print when you move on from manual input (or when you have learnt the format)
             forcePrint "\n Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
 
-            let input = inputString
-            //let input =  System.Console.ReadLine()
+            let input = coordAndTile listOfCoords listOfTiles
             let move = RegEx.parseMove input
             
             
-            debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
+            //debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
            
             send cstream (SMPlay move)
 
@@ -340,9 +296,11 @@ module Scrabble =
                 
                 let updateOccSquares =
                     List.fold(fun squares (coord,(id,(_,_))) -> Map.add coord id squares) st.occupiedSquares ms // update used squares
-                    
-                let st' = {st with hand = newHand; occupiedSquares = updateOccSquares} // This state needs to be update    aux st'
-                
+
+                let updatedNextTileId = fst (snd (ms.[ms.Length-1]))
+                let updatedNextTileCoord = fst ms.[ms.Length-1]
+                let nextTileUpdated = ((updatedNextTileId, updatedNextTileCoord), not (snd st.nextTile))
+                let st' = {st with hand = newHand; occupiedSquares = updateOccSquares; nextTile = nextTileUpdated} // This state needs to be update    aux st'
                 aux st'
 
             | RCM (CMChangeSuccess (newPieces)) ->
