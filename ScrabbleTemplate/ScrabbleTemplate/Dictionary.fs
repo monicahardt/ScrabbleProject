@@ -2,6 +2,7 @@ module internal Dictionary
 
 open System.Collections.Generic
 open System.Linq
+open ScrabbleUtil.DebugPrint
 
 type Dict =
     |Leaf of bool
@@ -86,13 +87,18 @@ let step (c: char) (dict: Dict) =
             let foundDict = d.[c]
             match foundDict with
             |Node (b,dictionary) ->
+                //printf("There was a path (node) to the char in the dictionary and a word has ended:  %b\n") b
                 Some (b,foundDict)
             |Leaf b ->
+                //printf("There was a path (leaf) to the char in the dictionary and a word has ended %b\n") b
                 Some (b, foundDict)
         |(false) ->
+            //printf("There char was not in the dictionary\n")
             //if we are here the char was not found in the nodes dictionary and therefor there exists no path
             None
     //if we are here we have reached a leaf and the node does not contain the char so we return none
-    |Leaf _ -> None
+    |Leaf _ ->
+        //printf("There was not a path to the char in the dictionary we are at a leaf\n")
+        None
    
 
