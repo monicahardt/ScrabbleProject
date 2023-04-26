@@ -63,23 +63,53 @@ module State =
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
+    let occupiedSquares st          = st.occupiedSquares
 
 module Algorithm =
     open Dictionary
     
     // ------------ HELPER FUNCTIONS ------------
+    
+    
     let getCharFromId (pieces: Map<uint32,tile>) (id: uint32) =
         let tile = Map.find id pieces
         (fst (List.head (Set.toList tile)))
+    
+    let getPointValueFromId (pieces: Map<uint32,tile>) (id: uint32) =
+        let tile = Map.find id pieces
+        (snd (List.head (Set.toList tile)))
    
+    let getTileFromListIds (pieces: Map<uint32, tile>) (listOfIds: uint32 list) =
+        List.fold (fun (acc: string list) id -> 
+                    acc @ [(id.ToString() + (string (getCharFromId pieces id)) + (string ((getPointValueFromId pieces id))))]
+                    ) [] listOfIds
+
     let getListOfCharsFromHand (pieces: Map<uint32,tile>)  (st: State.state) =
         st.hand |> MultiSet.fold(fun lst id _ -> lst @ [getCharFromId pieces id]) []
    
     let getListIdsFromHand (st: State.state) =
         toList st.hand
 
+    let makeCoords (playHorizontal: bool) (startCoord: (int * int)) (lengthOfWordToPlay)= 
+        let (myCoordList: (int*int) list) = []
+
+        let rec aux (acc: (int*int) list) i = 
+            if(i < lengthOfWordToPlay) then
+                if playHorizontal then
+                    let newAcc = List.rev(((fst startCoord), i) :: acc)
+                    aux newAcc (i+1)
+    
+                else
+                    let newAcc = List.rev((i, snd startCoord) :: myCoordList)
+                    aux newAcc (i+1)
+                
+            else acc
+        aux myCoordList 0
+                
+        
+
     // ------------ ALGORITHM ------------
-    let firstMove (st: State.state) (pieces: Map<uint32,tile>): Map<uint32, uint32 list> = 
+    let findPossibleMoves (st: State.state) (pieces: Map<uint32,tile>): Map<uint32, uint32 list> = 
         let handIds = getListIdsFromHand st
 
         //outer recursion should recurse over the hand
@@ -142,11 +172,56 @@ module Algorithm =
         
         //first call to aux with i being 0 and our map being empty
         aux 0 Map.empty                                    
-           
 
+
+// ------------ MOVE ------------
+    let validateMove (st: State.state) (pieces: Map<uint32,tile>)  (resultMap: Map<uint32, uint32 list>)= 
+         Map.fold(fun acc id lst -> 
+                List.fold(fun (accS: string) (id: uint32) -> 
+                    //we call loopkup to check if a word is valid
+                    accS + (string (getCharFromId pieces id))
+                ) "" lst |> 
+                (fun str ->
+                    match (lookup str st.dict) with
+                    |true -> acc
+                    |false -> Map.remove(id) acc)
+            ) resultMap resultMap
+            
+    let createInputMove (st: State.state) (pieces: Map<uint32,tile>) (validMoves: Map<uint32, uint32 list>)   = 
+        let board = st.occupiedSquares
+        if board.IsEmpty then
+             Map.fold(fun (acc: (uint32 list) list) id (lst: uint32 list) -> 
+                if lst.Length > 2 then 
+                    acc @ [lst]
+                else acc
+             ) List.Empty validMoves |> (fun listOfLongerWords -> 
+                    if listOfLongerWords.IsEmpty then "" else 
+                        List.fold(fun acc id -> acc + (string (getCharFromId pieces id))) "" (listOfLongerWords.Head)
+                        )                                     
+        else
+            let word = Map.minKeyValue(validMoves)
+            List.fold(fun acc id -> acc + (string (getCharFromId pieces id))) "" (snd (word))
+                        
+
+    let createInputMove1 (st: State.state) (pieces: Map<uint32,tile>) (validMoves: Map<uint32, uint32 list>)   = 
+        let board = st.occupiedSquares
+        if board.IsEmpty then
+             Map.fold(fun (acc: (uint32 list) list) id (lst: uint32 list) -> 
+                //debugPrint ("DEBUGGING MAP ORDER: " + (id.ToString()) + "\n")
+                if lst.Length > 2 then 
+                    acc @ [lst]
+                else acc
+             ) List.Empty validMoves |> (fun listOfLongerWords -> 
+                    if listOfLongerWords.IsEmpty then [] else 
+                        List.fold(fun acc id -> List.rev(id :: acc)) [] (listOfLongerWords.Head)
+                        )                                     
+        else
+            let word = Map.minKeyValue(validMoves)
+            List.fold(fun acc id -> List.rev(id :: acc)) [] (snd (word))
+        
+    
+    
 // ------------ BOARD HANDLING ------------
-    let createInputMove = failwith "not implemented"
-
     let findBoardPosition = failwith "not implemented"
    
 module Scrabble =
@@ -157,9 +232,28 @@ module Scrabble =
 
         let rec aux (st : State.state) =
             Print.printHand pieces (State.hand st)
-            
-            let resultMap = firstMove st pieces 
 
+            let playInputList = findPossibleMoves st pieces |> validateMove st pieces |> createInputMove1 st pieces
+            List.fold(fun acc id -> debugPrint (id.ToString())) () playInputList
+
+            let lst = makeCoords true (0,0) (playInputList.Length)
+            
+            debugPrint "PRINTING COORDINATES LIST \n"
+            List.fold(fun acc coor -> debugPrint (sprintf "Printing coord (%d %d) \n" (fst coor) (snd coor))) () (makeCoords true (0,0) (playInputList.Length))
+            debugPrint "****************** \n"
+
+            List.fold(fun acc str -> debugPrint (sprintf "Printing tile %s \n" str)) () (getTileFromListIds pieces playInputList)
+
+            (*(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*)
+            //let inputString = 
+            
+            (* 
+            
+            let resultMap = findPossibleMoves st pieces 
+            let validStrings = validateMove resultMap pieces st
+             
+            List.fold(fun _ element -> debugPrint (element + " \n" )) () validStrings
+                
             Map.fold(fun _ id lst -> forcePrint (sprintf "printing a list %d \n" id) ) () resultMap
 
             Map.fold(fun acc id lst -> 
@@ -169,7 +263,8 @@ module Scrabble =
             ) () resultMap
             
             debugPrint ("printing the size of the map " + resultMap.Count.ToString())
-           
+            *)
+
             // remove the force print when you move on from manual input (or when you have learnt the format)
             forcePrint "\n Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
          
@@ -177,12 +272,17 @@ module Scrabble =
             let input =  System.Console.ReadLine()
             let move = RegEx.parseMove input
             
-          
+            
             debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
+           
             send cstream (SMPlay move)
 
+            //how to change tiles at hand
+           //send cstream (SMChange (toList st.hand))
+           
+
             let msg = recv cstream
-            debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
+            //debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             
             match msg with
             
@@ -195,9 +295,16 @@ module Scrabble =
                 
                 let updateOccSquares =
                     List.fold(fun squares (coord,(id,(_,_))) -> Map.add coord id squares) st.occupiedSquares ms // update used squares
-                
+                    
                 let st' = {st with hand = newHand; occupiedSquares = updateOccSquares} // This state needs to be update    aux st'
                 
+                aux st'
+
+            | RCM (CMChangeSuccess (newPieces)) ->
+                debugPrint "We tried to change tiles"
+                let newChangedHand = List.fold(fun hand (id, numOf) -> add id numOf hand) empty newPieces
+                let st' = {st with hand = newChangedHand} // This state needs to be update    aux st'
+                Print.printHand pieces (State.hand st)
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
@@ -255,53 +362,12 @@ module Scrabble =
         let testHandSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty testHandList
         
         //the original one
-        //fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet)
+        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet)
       
-        fun () -> playGame cstream testTilesMap (State.mkState board dict playerNumber testHandSet)
+        //fun () -> playGame cstream testTilesMap (State.mkState board dict playerNumber testHandSet)
         
         //set in to play for now
         //(0 0 14N1) (0 1 15O1)
         
  
-  (*
-    let checkMove (myMoveList: (uint32*bool) list) (pieces: Map<uint32,tile>) (st: State.state) =
-        forcePrint "check move was called \n"
-        let rec aux (lst: (uint32*bool) list) =
-            forcePrint "aux called"
-            match snd(lst.[0]) with
-            |true ->
-                forcePrint "it was possible to make a word and therefor we make an input with this \n"
-                makeInput [] myMoveList pieces st false //
-            |false ->
-                forcePrint "yo"
-                match lst with
-                |x::xs ->
-                    forcePrint "Whut"
-                    aux xs
-                |[] ->
-                    forcePrint "it was not possible to make a word so therefor we need to use another tile \n"
-                    let newList = firstStepFunction chooseTile st pieces
-                    makeInput [] newList pieces st false //
-        aux myMoveList
-     
-     
-     
-     let makeMove (dict: Dict) (st: State.state) (pieces: Map<uint32,tile>) (myMoveList: (uint32*bool) list) =
-        List.fold(fun acc i ->
-            //go through the dictionary to see if there is a path using step function
-            let pathExist = step (getCharFromId pieces i) dict
-            match pathExist with
-            | Some (b,d) ->
-                match b with
-                |true ->
-                    forcePrint  "a word ends here \n"
-                    acc @ [i, b] //a word ends here we add it to myMovesList
-                |false ->
-                    forcePrint "no word ends here but there is a path \n"
-                    acc @ [i, b] //no word ends here we add it to myMovesList
-            |None ->
-                forcePrint (sprintf "there exists no path to the char: %c \n" (getCharFromId pieces i))
-                acc //no path here so we do not add it to the list
-            ) myMoveList (getListIdsFromHand st)
-        
-    *)
+  
