@@ -96,16 +96,18 @@ module Algorithm =
         let rec aux (acc: (int*int) list) i = 
             if(i < lengthOfWordToPlay) then
                 if playHorizontal then
-                    let newAcc = List.rev(((fst startCoord), i) :: acc)
+                    let newCoord = ((fst startCoord), i)
+                    //debugPrint (sprintf "made a new coord: x: %d y: %d \n" (fst newCoord) (snd newCoord))
+                    let newAcc = (newCoord) :: acc
                     aux newAcc (i+1)
     
                 else
-                    let newAcc = List.rev((i, snd startCoord) :: myCoordList)
+                    let newAcc = (i, snd startCoord) :: acc
                     aux newAcc (i+1)
                 
             else acc
         aux myCoordList 0
-                
+       |> (fun lstToFlip -> List.rev(lstToFlip))         
         
 
     // ------------ ALGORITHM ------------
@@ -207,20 +209,18 @@ module Algorithm =
         let board = st.occupiedSquares
         if board.IsEmpty then
              Map.fold(fun (acc: (uint32 list) list) id (lst: uint32 list) -> 
-                //debugPrint ("DEBUGGING MAP ORDER: " + (id.ToString()) + "\n")
                 if lst.Length > 2 then 
-                    acc @ [lst]
+                    [lst] @ acc
                 else acc
              ) List.Empty validMoves |> (fun listOfLongerWords -> 
                     if listOfLongerWords.IsEmpty then [] else 
-                        List.fold(fun acc id -> List.rev(id :: acc)) [] (listOfLongerWords.Head)
+                        List.fold(fun acc id -> (id :: acc)) [] (listOfLongerWords.Head)
                         )                                     
         else
             let word = Map.minKeyValue(validMoves)
-            List.fold(fun acc id -> List.rev(id :: acc)) [] (snd (word))
-        
-    
-    
+            List.fold(fun acc id -> (id :: acc)) [] (snd (word))
+        |> (fun lstToFlip -> List.rev(lstToFlip))
+
 // ------------ BOARD HANDLING ------------
     let findBoardPosition = failwith "not implemented"
    
@@ -233,8 +233,34 @@ module Scrabble =
         let rec aux (st : State.state) =
             Print.printHand pieces (State.hand st)
 
-            let playInputList = findPossibleMoves st pieces |> validateMove st pieces |> createInputMove1 st pieces
-            List.fold(fun acc id -> debugPrint (id.ToString())) () playInputList
+            let findMap = findPossibleMoves st pieces 
+
+            let validateMap =
+                debugPrint "checking the order of the first map \n" 
+                Map.fold(fun acc id lst ->
+                    //List.fold(fun acc id -> debugPrint (sprintf "id: %d" id + "\n")) () lst
+                    debugPrint (sprintf "Printing id from a list: %d \n" id)
+                ) () findMap
+
+                validateMove st pieces  findMap
+                
+            let create = 
+                debugPrint "checking the order of the second map \n" 
+                Map.fold(fun acc id lst ->
+                    //List.fold(fun acc id -> debugPrint (sprintf "id: %d" id + "\n")) () lst
+                    debugPrint (sprintf "Printing id from a list: %d \n" id)
+                ) () findMap
+               
+                createInputMove1 st pieces validateMap
+
+            let playInputList =
+                debugPrint "checking the order of the third list \n" 
+                List.fold(fun acc id -> debugPrint (sprintf "id: %d" id + "\n")) () create
+                create
+
+            debugPrint "*****THE WORD WE WANT TO PLAY IS ***** \n"
+            List.fold(fun acc id -> debugPrint ((string (getCharFromId pieces id)))) () playInputList
+            debugPrint "\n *************** \n"
 
             let lst = makeCoords true (0,0) (playInputList.Length)
             
