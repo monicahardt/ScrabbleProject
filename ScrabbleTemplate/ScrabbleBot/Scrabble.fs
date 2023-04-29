@@ -6,6 +6,7 @@ open ScrabbleUtil.ServerCommunication
 
 open System.IO
 
+
 open ScrabbleUtil.DebugPrint
 
 // The RegEx module is only used to parse human input. It is not used for the final product.
@@ -55,11 +56,14 @@ module State =
         dict          : ScrabbleUtil.Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
-        occupiedSquares : Map<coord, uint32>
+        //occupiedSquares : Map<coord, uint32 * (char*int)> //mapping a coordinate to a tuple of (id * tile)
+        occupiedSquares : Map<coord, uint32> //mapping a coordinate to a tuple of (id * tile)
         nextTile : ((uint32 * coord) * bool)
     }
 
-    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; occupiedSquares = Map.empty; nextTile = ((100u, (0,0)), true)}
+    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; 
+                //occupiedSquares = Map.empty<coord, uint32 * (char*int)>; nextTile = ((100u, (0,0)), true)}
+                occupiedSquares = Map.empty; nextTile = ((100u, (0,0)), true)}
     let board st         = st.board
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
@@ -71,7 +75,6 @@ module Algorithm =
     open Dictionary
     
     // ------------ HELPER FUNCTIONS ------------
-    
     
     let getCharFromId (pieces: Map<uint32,tile>) (id: uint32) =
         let tile = Map.find id pieces
@@ -91,6 +94,13 @@ module Algorithm =
    
     let getListIdsFromHand (st: State.state) =
         toList st.hand
+
+    let removeTileFromHand (st: State.state) (id: uint32) =
+        { st with hand = MultiSet.removeSingle id st.hand }
+
+    let removeTilesFromHand (st: State.state) (ids: List<uint32>) = 
+        List.fold removeTileFromHand st ids
+
 
     let makeCoords (playHorizontal: bool) (startCoord: (int * int)) (lengthOfWordToPlay) (isFirstMove: bool)= 
         let (myCoordList: (int*int) list) = []
@@ -125,71 +135,127 @@ module Algorithm =
         
 
     // ------------ ALGORITHM ------------
+    type Direction =
+    | Horizontal
+    | Vertical
+
+    let nextDict (currentDict: Dict) (id: uint32) (pieces: Map<uint32, tile>) = step (getCharFromId pieces id) currentDict
+
+    let makeAWord (word: uint32 list) (pieces: Map<uint32, tile>): string = 
+        List.fold(fun acc id -> 
+                                                acc + (string (getCharFromId pieces id))) "" word
+
+    //looping the entire hand with a function
+
+
+    let getHandAsList (hand: MultiSet<uint32>) =
+        toList hand 
+
+    //should return a single word in the form of a list
+    //tried continuations
     (*
-    let findPossibleMoves (st: State.state) (pieces: Map<uint32,tile>): Map<uint32, uint32 list> = 
-        let handIds = getListIdsFromHand st
-
-        //outer recursion should recurse over the hand
-        let rec aux (i: int) (auxMap: Map<uint32,uint32 list>) = 
-            if(i >= handIds.Length) 
-            then 
-                //there we not any tiles left on the hand to go through
-                auxMap 
-            else 
-                let charWeAreAt = handIds.[i]
-                //debugPrint (sprintf ("aux running again the char is now %c \n" )(getCharFromId pieces handIds.[i])) 
-                //debugPrint (sprintf "the char we are checking is %d \n" charWeAreAt) 
-                let handWithoutCharWeAreAt = removeSingle handIds.[i] st.hand
-                let firstCharStepped = step (getCharFromId pieces handIds.[i]) st.dict
+    let aux(st: State.state) (currentHand: MultiSet<uint32>) (currentDict: Dict) (direction: Direction) (pos: coord) (word: uint32 list) (pieces: Map<uint32, tile>) = 
+        let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict: Dict) (direction: Direction) (pos: coord) (word: uint32 list) (pieces: Map<uint32, tile>) c = 
+                let currentHandList = getHandAsList currentHand 
                 
-                match firstCharStepped with
-                    |Some(b,d) -> //this should always happen
-                        //adding the first id to the list result
-                        //debugPrint "Found the first char \n"
-                        let map = Map.add charWeAreAt [charWeAreAt] auxMap
-                            
-                        //recursive function start
-                        let rec lookForWord (dictionary: Dict) (MS: MultiSet<uint32>) (listOfPossibleWords: (uint32 list*bool)) =
-                            //debugPrint "******NEW RECURSION***** \n"
-                        
-                            //folding over the rest of the multiset
-                            MultiSet.fold(fun (acc: (uint32 list * bool)) id _ ->
-                                if (snd acc) then acc else
+                match currentHandList with 
+                |[] -> 
+                    debugPrint "\nTHE HAND WAS EMPTY \n"
+                    //debugPrint "We are done looping the hand"
+                    //checking if what we found is a valid word
+                    match lookup (makeAWord word pieces) st.dict with
+                    |true -> c word
+                    |_ -> c []
+                    
+                |x::xs ->
+                    debugPrint "\nTHE HAND WAS NOT EMPTY \n"
+                    //debugPrint "We are not done looping the hand"
+                    //try stepping the first in the list at hand
+                    match nextDict currentDict x pieces with 
+                    |Some(b,d) ->
+                        //debugPrint (sprintf "Stepped the char: %d there was a path" x)
+                        if b && (word.Length > 2) then
+                            let doneWord = x :: (word)
+                            c doneWord //a word ended
+                        else 
+                            //let newWord = x :: (word) //added the id to the back of the list word
+                            let updatedHand = removeSingle x currentHand
+                            firstAux st updatedHand d direction pos word pieces (fun res -> c(x :: res))
 
-                                //debugPrint (sprintf "folding over the char with id %d \n" id)
-                                match (step (getCharFromId pieces id) dictionary) with
-                                |Some(b,dict) ->
-                                    //let updatedAcc = (List.rev (id :: (fst (acc)))) //there was a path to this id so we add it to the foldList
-                                    let updatedHand = removeSingle id MS
-                                    
-                                    //debugPrint (sprintf "there was a path to the char with id %d \n" id)
-                                    //debugPrint (sprintf "printing size of the hand we are sending on: %d \n" (size updatedHand))
-                                   
-                                    //if b then debugPrint "a word has ended \n"  else debugPrint "continuing"
-                            
-                                    let updatedAccList = ((id :: (fst (acc)))) 
-                                    lookForWord dict updatedHand (updatedAccList,b)
+                    |None ->
+                        //debugPrint (sprintf "Stepped the char: %d there was not a path" x)
+                        let idRemovedFromHand = removeSingle x currentHand 
+                        let idAddedLastToHand = add x 1u currentHand
+                        firstAux st idAddedLastToHand currentDict direction pos word pieces (fun res -> c(res))
+                |>  (fun lst -> List.rev(lst))
 
-                                |None ->
-                                    //debugPrint (sprintf "there was not a path to the char with id %d \n" id)
-                                    acc
-                            ) listOfPossibleWords MS |> (fun x-> 
-                                                                //debugPrint "********A fold is complete. Aka a recursion is done******** \n" 
-                                                                x) 
-                        
-                        //first call to lookForWord
-                        let resultFromLookForWord = lookForWord d handWithoutCharWeAreAt (map.[charWeAreAt], false)
-                        //adding to the map the word (list) found in the lookForWord function
-                        let map = auxMap |> Map.add charWeAreAt (List.rev (fst resultFromLookForWord))
-                        //aux called with i incremented
-                        aux (i+1) map 
-                            
-                    |None -> 
-                        failwith "This should not happen"
-        
-        //first call to aux with i being 0 and our map being empty
-        aux 0 Map.empty                                    
+        firstAux st currentHand currentDict direction pos word pieces 
     *)
+    
+    let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict: Dict) (direction: Direction) (pos: coord) (word: uint32 list) (pieces: Map<uint32, tile>) = 
+  
+            let currentHandList = getHandAsList currentHand 
+            
+            match currentHandList with 
+            |[] -> 
+                debugPrint "\nTHE HAND WAS EMPTY \n"
+                //debugPrint "We are done looping the hand"
+                //checking if what we found is a valid word
+                match lookup (makeAWord word pieces) st.dict with
+                |true -> word
+                |_ -> []
+                
+            |x::xs ->
+                debugPrint "\nTHE HAND WAS NOT EMPTY \n"
+                //debugPrint "We are not done looping the hand"
+                //try stepping the first in the list at hand
+                match nextDict currentDict x pieces with 
+                |Some(b,d) ->
+                    //debugPrint (sprintf "Stepped the char: %d there was a path" x)
+                    if b then
+                        let doneWord = x :: (word)
+                        doneWord //a word ended
+                    else 
+                        let newWord = x :: (word) //added the id to the back of the list word
+                        let updatedHand = removeSingle x currentHand
+                        firstAux st updatedHand d direction pos newWord pieces
+
+                |None ->
+                    //debugPrint (sprintf "Stepped the char: %d there was not a path" x)
+                    let idRemovedFromHand = removeSingle x currentHand 
+                    let idAddedLastToHand = add x 1u currentHand
+                    firstAux st idAddedLastToHand currentDict direction pos word pieces
+            |>  (fun lst -> List.rev(lst))
+
+    //This is the function mentioned by Jesper
+    //Should generate a list of valid moves
+    let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direction: Direction)  = 
+        let currentHand = st.hand //our current hand
+        let currentDict = st.dict
+
+        
+        let resultListOfList = MultiSet.fold(fun acc i num ->
+                                                                    let word = firstAux st currentHand currentDict direction startPos [] pieces 
+                                                                    acc @ [word]) [] currentHand
+
+    
+        List.fold(fun acc lst -> 
+                                        debugPrint "\n PRINTING A WORD \n"
+                                        List.fold(fun acc id -> debugPrint (sprintf "%c \n" (getCharFromId pieces id))) () lst)
+                                        () resultListOfList   
+                                                 
+
+    let getNextMoveToPlay (st: State.state) (pieces: Map<uint32,tile>) = 
+        match st.occupiedSquares with
+        |OC when OC.IsEmpty -> 
+            debugPrint "\n ***** FIRST MOVE ***** \n"
+            first st pieces st.board.center Horizontal //if the board is empty this is the first move
+        |_-> //if the map was not empty there are already placed tiles on the board
+            debugPrint "\n ***** NOT FIRST MOVE ***** \n"
+            first st pieces st.board.center Horizontal
+
+                                     
+    (*
     let findPossibleMovesNew (st: State.state) (pieces: Map<uint32,tile>) (firstDict: Dict) (firstCharId: uint32): Map<uint32, uint32 list> = 
             
             let handIds = getListIdsFromHand st
@@ -268,7 +334,7 @@ module Algorithm =
                 aux 0 mapToUse firstDict
 
 
-    
+    //The first function to be called to check if this is the first word we want to play or not
     let firstFunction(st: State.state) (pieces: Map<uint32, tile>) =
         if (fst (fst st.nextTile)) = 100u then 
             debugPrint " \nThis is the first move \n"
@@ -287,6 +353,8 @@ module Algorithm =
             
 
 // ------------ MOVE ------------
+
+    //validates the words to possible play on the board
     let validateMove (st: State.state) (pieces: Map<uint32,tile>)  (resultMap: Map<uint32, uint32 list>)= 
          Map.fold(fun acc id lst -> 
                 List.fold(fun (accS: string) (id: uint32) -> 
@@ -299,6 +367,8 @@ module Algorithm =
                     |false -> Map.remove(id) acc)
             ) resultMap resultMap           
 
+
+    //Takes the first word in the map of valid moves and creates a list of ids to play
     let createAWordsList (st: State.state) (pieces: Map<uint32,tile>) (validMoves: Map<uint32, uint32 list>)   = 
         let board = st.occupiedSquares
         if board.IsEmpty then
@@ -322,6 +392,7 @@ module Algorithm =
         |> (fun lstToFlip -> List.rev(lstToFlip))
 
 
+    //Takes a list of coordinates and a list of tiles and creates the input string
     let createFinalInputString (coords: (int * int) list) (tiles: string list) =
         let rec addCoordAndTile (coord: (int * int) list) (tile: string list) (acc: string)=
             match (coord, tile) with
@@ -331,7 +402,7 @@ module Algorithm =
                 addCoordAndTile cs ts newAcc
             | _ -> acc
         addCoordAndTile coords tiles ""
-
+*)
    
 module Scrabble =
     open System.Threading
@@ -343,52 +414,16 @@ module Scrabble =
             debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
             Print.printHand pieces (State.hand st)
 
-            //let playInputList = 
-               // findPossibleMoves st pieces |> validateMove st pieces |> createAWordsList st pieces
-
-            
-            let playInputList = firstFunction st pieces
-                                                 |> (fun x -> 
-                                                            debugPrint "\n We get out of firstfunction \n"
-                                                            x) |> validateMove st pieces |> (fun x -> 
-                                                                                                    debugPrint "\n We get out of validation \n"
-                                                                                                    x)  |> createAWordsList st pieces |> (fun x -> 
-                                                                                                                                                debugPrint "\n We get out of createWordList \n"
-                                                                                                                                                x)
-
-            let startCoordOfThisAux = snd(fst st.nextTile)
-            debugPrint (sprintf "we get the start coord to be: x: %d y: %d " (fst startCoordOfThisAux) (snd startCoordOfThisAux))
-            let isFirstMove = if fst(fst st.nextTile) = 100u then true else false
-         
-            if (not (playInputList.IsEmpty)) then 
-                let listOfCoords = makeCoords (snd st.nextTile) startCoordOfThisAux (playInputList.Length) isFirstMove
-                debugPrint "***** COORDINATES ****** \n"    
-                List.fold(fun acc (x,y) -> debugPrint (sprintf "The coords made were x: %d y: %d \n" x y)) () listOfCoords
-                let listOfTiles = getTileFromListIds pieces playInputList
-        
-            //debugPrint (sprintf "list of coords has length: %d" listOfCoords.Length)
-            //debugPrint "***** OCCUPIED SQUARES ****** \n"    
-            //Map.fold(fun acc key value -> debugPrint ("Key: "+ (string (key)) + " Value: "+ (string (value)) + "\n")) () st.occupiedSquares
-            
-
+            getNextMoveToPlay st pieces
             // remove the force print when you move on from manual input (or when you have learnt the format)
             //forcePrint "\n Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
 
-                let input = createFinalInputString listOfCoords listOfTiles
-                let move = RegEx.parseMove input
+            let input = ""
+            let move = RegEx.parseMove input
 
-                debugPrint "\n ***** THE WORD WE ARE PLAYING IS ***** \n                 "
-                List.fold(fun acc id -> debugPrint ((string (getCharFromId pieces id)))) () playInputList
-                debugPrint "\n      *************** \n"
-                send cstream (SMPlay move)
-            
-            else 
-            //debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful. 
-                //how to change tiles at hand
-                debugPrint " \n We were not able to make a move so we swap tiles \n"
-                send cstream (SMChange (toList st.hand))
-
-
+    
+            send cstream (SMPlay move)
+        
             let msg = recv cstream
             //debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             
