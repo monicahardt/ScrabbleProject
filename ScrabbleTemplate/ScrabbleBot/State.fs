@@ -1,6 +1,7 @@
 
 module internal State
 open ScrabbleUtil
+open MultiSet
 
     // Make sure to keep your state localised in this module. It makes your life a whole lot easier.
     // Currently, it only keeps track of your hand, your player number, your board, and your dictionary,
@@ -26,3 +27,27 @@ open ScrabbleUtil
     let hand st          = st.hand
     let occupiedSquares st          = st.occupiedSquares
     let nextTile st = st.nextTile
+
+
+    let removeTileFromHand (hand: MultiSet<uint32>) (id: uint32) =
+        MultiSet.removeSingle id hand
+
+    let removeTilesFromHand (st: state) (ids: list<coord * (uint32 * (char * int))>) =
+        let updatedHand = List.fold(fun acc tile -> removeTileFromHand acc (fst(snd tile))) st.hand ids
+        {st with hand = updatedHand}
+
+    let addTileToHand (hand: MultiSet<uint32>) (id: uint32) (numOf: uint32) =
+       add id numOf hand
+
+    let addNewTiles (newTiles: list<uint32 * uint32> ) (st: state)  =
+        let updatedHand = List.fold(fun acc tile -> addTileToHand acc (fst tile) (snd tile)) st.hand newTiles   
+        {st with hand = updatedHand}
+
+       
+    let updateOccSquares (ids: list<coord * (uint32 * (char * int))>) (st: state) =
+        let updatedOccSpuares = List.fold(fun squares (coord,(id,(_,_))) -> Map.add coord id squares) st.occupiedSquares ids // update used squares
+        {st with occupiedSquares = updatedOccSpuares}
+
+    let changeHand (newPieces: list<uint32 * uint32>) (st: state) = 
+       let stateWithEmptyHand = {st with hand = empty}
+       addNewTiles newPieces stateWithEmptyHand      
