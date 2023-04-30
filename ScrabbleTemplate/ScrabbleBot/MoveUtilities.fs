@@ -25,6 +25,7 @@ let getHandAsList (hand: MultiSet<uint32>) =
     toList hand     
     
 let makeMove (result: uint32 list list)(pieces: Map<uint32, tile>) = 
+    debugPrint (sprintf "MakeMove called with resultlist of size: %d" result.Length)
     let wordToPlay = result.Head
     let coordsTest = [(0,0); (0,1); (0,2); (0,3)]
 

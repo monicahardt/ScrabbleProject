@@ -2,6 +2,7 @@
 module internal State
 open ScrabbleUtil
 open MultiSet
+open ScrabbleUtil.DebugPrint
 
     // Make sure to keep your state localised in this module. It makes your life a whole lot easier.
     // Currently, it only keeps track of your hand, your player number, your board, and your dictionary,
@@ -52,29 +53,28 @@ open MultiSet
        addNewTiles newPieces stateWithEmptyHand      
 
 
-
     //after a word has been placed we want to update good starting positions aka possible anchors to play at
     //an achor is a square adjecent to a word already placed on the board, which is needed every time we make a move*
     //* except for the first move where the board is empty
-    let updatePossibleAnchors (placedTiles: list<coord * (uint32 * (char * int))>) (st: state) = 
-
-        let rec aux (acc: Set<coord>) (tilesLeft: list<coord * (uint32 * (char * int))>) =
+    let updatePossibleAnchors (placedTiles: list<coord * (uint32 * (char * int))>) (st: state) =
+        let rec aux (tilesLeft: list<coord * (uint32 * (char * int))>) (acc: Set<coord>)  =
             match tilesLeft with
             |[] -> acc
             |tile:: tiles -> 
                 let Tcoord = (fst tile)
                 let rightAnchor = (((fst Tcoord) + 1), (snd Tcoord))
                 let leftAnchor = (((fst Tcoord) - 1), (snd Tcoord))
-                let upAnchor = (((fst Tcoord)), (snd Tcoord) + 1) //possible flipped these to y's
-                let downAnchor = (((fst Tcoord)), (snd Tcoord) - 1)
+                let upAnchor = (((fst Tcoord)), (snd Tcoord) - 1) //possible flipped these to y's
+                let downAnchor = (((fst Tcoord)), (snd Tcoord) + 1)
 
-                let anchorsToCheck = [rightAnchor; leftAnchor; upAnchor; downAnchor]    
-                List.fold(fun acc coord->
+                let anchorsToCheck = [rightAnchor; leftAnchor; upAnchor; downAnchor]  
+
+                List.fold(fun accFold coord->
                     match Map.tryFind (coord) st.occupiedSquares with
-                    |Some x -> acc
-                    |None -> Set.add coord acc
-                    ) st.possibleAnchors anchorsToCheck
+                    |Some x -> accFold
+                    |None -> 
+                        Set.add coord accFold //if the anchor is not in occupiedSquares we add it to the set of coors that is our crossset
+                ) acc anchorsToCheck |> aux tiles
 
-
-        let newAnchors = aux st.possibleAnchors placedTiles
-        {st with possibleAnchors = newAnchors}
+        let updatedAnchors = aux placedTiles st.possibleAnchors
+        {st with possibleAnchors = updatedAnchors}

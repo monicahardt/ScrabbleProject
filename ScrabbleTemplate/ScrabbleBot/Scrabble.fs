@@ -54,6 +54,7 @@ module Scrabble =
                     addNewTiles newPieces |>           
                     updateOccSquares ms |>
                     updatePossibleAnchors ms 
+                
                 aux st'
 
             | RCM (CMChangeSuccess (newPieces)) ->
