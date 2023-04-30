@@ -5,9 +5,8 @@ open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
 
 open System.IO
-
-
 open ScrabbleUtil.DebugPrint
+open State
 
 // The RegEx module is only used to parse human input. It is not used for the final product.
 
@@ -44,63 +43,9 @@ module RegEx =
                             let myString = $"Tile: %d{id} %c{(fst (List.head (Set.toList tile)))} %d{(snd (List.head (Set.toList tile)))   }"
                             acc + myString)
                             "" pieces
-   
-module State = 
-    // Make sure to keep your state localised in this module. It makes your life a whole lot easier.
-    // Currently, it only keeps track of your hand, your player number, your board, and your dictionary,
-    // but it could, potentially, keep track of other useful
-    // information, such as number of players, player turn, etc.
 
-    type state = {
-        board         : Parser.board
-        dict          : ScrabbleUtil.Dictionary.Dict
-        playerNumber  : uint32
-        hand          : MultiSet.MultiSet<uint32>
-        //occupiedSquares : Map<coord, uint32 * (char*int)> //mapping a coordinate to a tuple of (id * tile)
-        occupiedSquares : Map<coord, uint32> //mapping a coordinate to a tuple of (id * tile)
-        nextTile : ((uint32 * coord) * bool)
-    }
-
-    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; 
-                //occupiedSquares = Map.empty<coord, uint32 * (char*int)>; nextTile = ((100u, (0,0)), true)}
-                occupiedSquares = Map.empty; nextTile = ((100u, (0,0)), true)}
-    let board st         = st.board
-    let dict st          = st.dict
-    let playerNumber st  = st.playerNumber
-    let hand st          = st.hand
-    let occupiedSquares st          = st.occupiedSquares
-    let nextTile st = st.nextTile
 
 module Algorithm =
-    open Dictionary
-    
-    // ------------ HELPER FUNCTIONS ------------
-    
-    let getCharFromId (pieces: Map<uint32,tile>) (id: uint32) =
-        let tile = Map.find id pieces
-        (fst (List.head (Set.toList tile)))
-    
-    let getPointValueFromId (pieces: Map<uint32,tile>) (id: uint32) =
-        let tile = Map.find id pieces
-        (snd (List.head (Set.toList tile)))
-   
-    let getTileFromListIds (pieces: Map<uint32, tile>) (listOfIds: uint32 list) =
-        List.fold (fun (acc: string list) id -> 
-                    acc @ [(id.ToString() + (string (getCharFromId pieces id)) + (string ((getPointValueFromId pieces id))))]
-                    ) [] listOfIds
-
-    let getListOfCharsFromHand (pieces: Map<uint32,tile>)  (st: State.state) =
-        st.hand |> MultiSet.fold(fun lst id _ -> lst @ [getCharFromId pieces id]) []
-   
-    let getListIdsFromHand (st: State.state) =
-        toList st.hand
-
-    let removeTileFromHand (st: State.state) (id: uint32) =
-        { st with hand = MultiSet.removeSingle id st.hand }
-
-    let removeTilesFromHand (st: State.state) (ids: List<uint32>) = 
-        List.fold removeTileFromHand st ids
-
 
     let makeCoords (playHorizontal: bool) (startCoord: (int * int)) (lengthOfWordToPlay) (isFirstMove: bool)= 
         let (myCoordList: (int*int) list) = []
@@ -134,113 +79,16 @@ module Algorithm =
        |> (fun lstToFlip -> List.rev(lstToFlip))         
         
 
-    // ------------ ALGORITHM ------------
-    type Direction =
-    | Horizontal
-    | Vertical
+// ------------ ALGORITHM ------------
+type Direction =
+| Horizontal
+| Vertical
 
-    let nextDict (currentDict: Dict) (id: uint32) (pieces: Map<uint32, tile>) = step (getCharFromId pieces id) currentDict
-
-    let makeAWord (word: uint32 list) (pieces: Map<uint32, tile>): string = 
-        List.fold(fun acc id -> 
-                                                acc + (string (getCharFromId pieces id))) "" word
-
-    //looping the entire hand with a function
-
-
-    let getHandAsList (hand: MultiSet<uint32>) =
-        toList hand 
-    
-    let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict: Dict) (direction: Direction) (pos: int) (word: uint32 list) (pieces: Map<uint32, tile>) = 
-            let currentHandList = getHandAsList currentHand
-            //debugPrint (sprintf "\nsize of the hand is now: %d \n" currentHandList.Length)
-            List.iter(fun id -> debugPrint (id.ToString() + "\n")) currentHandList
-          
-
-            match currentHandList with 
-            |[] -> 
-                //debugPrint "\nTHE HAND WAS EMPTY \n"
-                //debugPrint "We are done looping the hand"
-                //checking if what we found is a valid word
-                match lookup (makeAWord (List.rev word) pieces) st.dict with
-                |true -> 
-                    debugPrint "\nEmpty hand found a word\n"
-                    (List.rev word)
-                |_ -> 
-                    debugPrint "\n Empty hand found no word\n"
-                    []
-                
-            |x::xs ->
-
-                debugPrint "\nTHE HAND WAS NOT EMPTY \n"
-                //debugPrint "We are not done looping the hand"
-                //try stepping the first in the list at hand
-                match nextDict currentDict x pieces with 
-                |Some(b,d) ->
-                    //debugPrint (sprintf "Stepped the char: %d there was a path" x)
-                    if b then
-                        let doneWord = x :: (word)
-                        debugPrint "\n** MADE A WORD **\n"
-                        //firstAux st empty d direction pos doneWord pieces
-                         //a word ended
-                        (List.rev doneWord)
-                    else 
-                        //debugPrint "There was a path but no word ended"
-                        let newWord = x :: (word) //added the id to the back of the list word
-                        let updatedHand = List.fold(fun acc id -> 
-                                                                                        removeSingle id acc) st.hand newWord
-                        //let updatedHand = removeSingle x currentHand
-                        firstAux st updatedHand d direction pos newWord pieces
-
-                |None ->
-                    //debugPrint (sprintf "Stepped the char: %d there was not a path" x)
-                    let idRemovedFromHand = removeSingle x currentHand //SOMETHING IS WRONG HERE!!!
-                    firstAux st idRemovedFromHand currentDict direction pos word pieces
-                  
-           
-
-    //This is the function mentioned by Jesper
-    //Should generate a list of valid moves
-    let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direction: Direction)  = 
-        let currentHand = st.hand //our current hand
-        let handList = getHandAsList st.hand
-        let currentDict = st.dict
-
-        let rec result (i: int) (acc: uint32 list list) (hand: MultiSet<uint32>) = 
-            if i > handList.Length-1 
-            then 
-                acc 
-            else 
-                let nowChar = handList.[i] 
-                let firstStep = nextDict currentDict nowChar pieces
-                match firstStep with 
-                |Some(b,d) -> 
-                    let myHand = removeSingle nowChar currentHand
-                    let word = firstAux st myHand d direction i [nowChar] pieces
-                    let newAcc = acc @ [word]
-                    result (i+1) newAcc currentHand
-                |None -> failwith "what went wrong"
-        let resultListOfList = result 0 [] st.hand
-
-        debugPrint "\nTHE FIRST WORDS FROM EACH LETTER IN HAND WE CAN PLAY ARE\n"
-        List.fold(fun acc lst -> 
-                                        debugPrint "\n"
-                                        List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) lst)
-                                        () resultListOfList   
-                                                 
-
-    let getNextMoveToPlay (st: State.state) (pieces: Map<uint32,tile>) = 
-        match st.occupiedSquares with
-        |OC when OC.IsEmpty -> 
-            debugPrint "\n ***** FIRST MOVE ***** \n"
-            first st pieces st.board.center Horizontal //if the board is empty this is the first move
-        |_-> //if the map was not empty there are already placed tiles on the board
-            debugPrint "\n ***** NOT FIRST MOVE ***** \n"
-            first st pieces st.board.center Horizontal
 
 module Scrabble =
     open System.Threading
     open Algorithm
+    open Moves
 
     let playGame cstream pieces (st : State.state) =
 
@@ -248,10 +96,10 @@ module Scrabble =
             debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
             Print.printHand pieces (State.hand st)
 
-            getNextMoveToPlay st pieces
+            let result = getNextMoveToPlay st pieces
             // remove the force print when you move on from manual input (or when you have learnt the format)
             //forcePrint "\n Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
-
+        
             let input = ""
             let move = RegEx.parseMove input
 
