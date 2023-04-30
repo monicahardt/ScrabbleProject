@@ -3,7 +3,7 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-  
+    
     <Compile Include="MultiSet.fsi" />
     <Compile Include="MultiSet.fs" />
     <Compile Include="FParsecLight.fsi" />
@@ -14,6 +14,8 @@
     <Compile Include="Parser.fsi" />
     <Compile Include="Parser.fs" />
     <Compile Include="State.fs" />
+    <Compile Include="Tile.fs" />
+    <Compile Include="Hand.fs" />
     <Compile Include="MoveUtilities.fs" />
     <Compile Include="Moves.fs" />
     <Compile Include="Scrabble.fsi" />

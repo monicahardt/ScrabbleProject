@@ -14,20 +14,19 @@ open MultiSet
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
         //occupiedSquares : Map<coord, uint32 * (char*int)> //mapping a coordinate to a tuple of (id * tile)
-        occupiedSquares : Map<coord, uint32> //mapping a coordinate to a tuple of (id * tile)
-        nextTile : ((uint32 * coord) * bool)
+        occupiedSquares : Map<coord, (uint32 * (char*int))> //mapping a coordinate to a tuple of (id * tile)
+        possibleAnchors : Set<coord>
     }
 
     let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; 
-                //occupiedSquares = Map.empty<coord, uint32 * (char*int)>; nextTile = ((100u, (0,0)), true)}
-                occupiedSquares = Map.empty; nextTile = ((100u, (0,0)), true)}
+                occupiedSquares = Map.empty<coord, uint32 * (char*int)>; possibleAnchors = Set.empty}
+               
     let board st         = st.board
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
     let occupiedSquares st          = st.occupiedSquares
-    let nextTile st = st.nextTile
-
+    let possibleAnchors st = st.possibleAnchors
 
     let removeTileFromHand (hand: MultiSet<uint32>) (id: uint32) =
         MultiSet.removeSingle id hand
@@ -45,9 +44,37 @@ open MultiSet
 
        
     let updateOccSquares (ids: list<coord * (uint32 * (char * int))>) (st: state) =
-        let updatedOccSpuares = List.fold(fun squares (coord,(id,(_,_))) -> Map.add coord id squares) st.occupiedSquares ids // update used squares
+        let updatedOccSpuares = List.fold(fun squares placedPiece -> Map.add (fst placedPiece) (snd placedPiece) squares) st.occupiedSquares ids // update used squares
         {st with occupiedSquares = updatedOccSpuares}
 
     let changeHand (newPieces: list<uint32 * uint32>) (st: state) = 
        let stateWithEmptyHand = {st with hand = empty}
        addNewTiles newPieces stateWithEmptyHand      
+
+
+
+    //after a word has been placed we want to update good starting positions aka possible anchors to play at
+    //an achor is a square adjecent to a word already placed on the board, which is needed every time we make a move*
+    //* except for the first move where the board is empty
+    let updatePossibleAnchors (placedTiles: list<coord * (uint32 * (char * int))>) (st: state) = 
+
+        let rec aux (acc: Set<coord>) (tilesLeft: list<coord * (uint32 * (char * int))>) =
+            match tilesLeft with
+            |[] -> acc
+            |tile:: tiles -> 
+                let Tcoord = (fst tile)
+                let rightAnchor = (((fst Tcoord) + 1), (snd Tcoord))
+                let leftAnchor = (((fst Tcoord) - 1), (snd Tcoord))
+                let upAnchor = (((fst Tcoord)), (snd Tcoord) + 1) //possible flipped these to y's
+                let downAnchor = (((fst Tcoord)), (snd Tcoord) - 1)
+
+                let anchorsToCheck = [rightAnchor; leftAnchor; upAnchor; downAnchor]    
+                List.fold(fun acc coord->
+                    match Map.tryFind (coord) st.occupiedSquares with
+                    |Some x -> acc
+                    |None -> Set.add coord acc
+                    ) st.possibleAnchors anchorsToCheck
+
+
+        let newAnchors = aux st.possibleAnchors placedTiles
+        {st with possibleAnchors = newAnchors}

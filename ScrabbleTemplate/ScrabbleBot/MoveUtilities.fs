@@ -7,6 +7,9 @@ open Dictionary
 open ScrabbleUtil.DebugPrint
 
  // ------------ HELPER FUNCTIONS ------------
+type Direction =
+|Vertical
+|Horizontal
     
 let getCharFromId (pieces: Map<uint32,tile>) (id: uint32) =
     let tile = Map.find id pieces
@@ -34,3 +37,8 @@ let makeMove (result: uint32 list list)(pieces: Map<uint32, tile>) =
             aux (i+1) (thisPiece :: acc)
         else acc
     aux 0 []
+
+let getNextCoordinate (pos: coord) (offset: int32) (dir: Direction) =
+    match dir with
+    | Vertical -> (fst pos), (snd pos + offset)
+    | Horizontal -> ((fst pos) + offset, (snd pos))

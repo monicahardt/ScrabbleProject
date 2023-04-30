@@ -52,7 +52,8 @@ module Scrabble =
                 let st' =
                     removeTilesFromHand st ms |>
                     addNewTiles newPieces |>           
-                    updateOccSquares ms
+                    updateOccSquares ms |>
+                    updatePossibleAnchors ms 
                 aux st'
 
             | RCM (CMChangeSuccess (newPieces)) ->
