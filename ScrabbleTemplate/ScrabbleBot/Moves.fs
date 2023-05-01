@@ -18,7 +18,6 @@ let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict:
         let currentHandList = getHandAsList currentHand
         //debugPrint (sprintf "\nsize of the hand is now: %d \n" currentHandList.Length)
         // List.iter(fun id -> debugPrint (id.ToString() + "\n")) currentHandList
-        
         match currentHandList with 
         |[] -> 
             //debugPrint "\nTHE HAND WAS EMPTY \n"
@@ -51,12 +50,6 @@ let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict:
                     else 
                         //debugPrint "\n** DID NOT FIND A LONGER WORD THAN WE ALREADY HAVE **\n"
                         firstAux st newHand d direction pos newTempWord longestWord pieces
-                        
-                    //continue
-
-                    //firstAux st empty d direction pos doneWord pieces
-                        //a word ended
-                    //(List.rev doneWord)
                 else 
                     //debugPrint "There was a path but no word ended"
                     let longestWord = x :: (longestWord) //added the id to the back of the list word

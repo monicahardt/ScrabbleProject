@@ -1,7 +1,6 @@
 module internal MoveUtilities
 
 open ScrabbleUtil
-open State
 open MultiSet
 open Dictionary
 open ScrabbleUtil.DebugPrint

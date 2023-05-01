@@ -4,19 +4,22 @@ open ScrabbleUtil
 open MultiSet
 open ScrabbleUtil.DebugPrint
 
+
     // Make sure to keep your state localised in this module. It makes your life a whole lot easier.
     // Currently, it only keeps track of your hand, your player number, your board, and your dictionary,
     // but it could, potentially, keep track of other useful
     // information, such as number of players, player turn, etc.
+    type Direction =
+    |Horizontal
+    |Vertical
 
     type state = {
         board         : Parser.board
         dict          : ScrabbleUtil.Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
-        //occupiedSquares : Map<coord, uint32 * (char*int)> //mapping a coordinate to a tuple of (id * tile)
         occupiedSquares : Map<coord, (uint32 * (char*int))> //mapping a coordinate to a tuple of (id * tile)
-        possibleAnchors : Set<coord>
+        possibleAnchors : Set<(coord * Direction)>
     }
 
     let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; 
@@ -56,25 +59,37 @@ open ScrabbleUtil.DebugPrint
     //after a word has been placed we want to update good starting positions aka possible anchors to play at
     //an achor is a square adjecent to a word already placed on the board, which is needed every time we make a move*
     //* except for the first move where the board is empty
+   (*
+    let removeAnchors (placedTiles: list<coord * (uint32 * (char * int))>) (st: state) =
+
+        List.fold(fun acc placedTile -> 
+                //check if anchors around are in set
+                let coordsOfPlacedTile = fst placedTile
+                if (Set.contains ((fst coordsOfPlacedTile -1), (snd coordsOfPlacedTile)) acc ) then
+                    //remove from set
+                    Set.remove ((fst coordsOfPlacedTile -1), snd coordsOfPlacedTile) acc
+                else acc
+
+                    ) st.possibleAnchors placedTiles
+
+    *)
+
     let updatePossibleAnchors (placedTiles: list<coord * (uint32 * (char * int))>) (st: state) =
-        let rec aux (tilesLeft: list<coord * (uint32 * (char * int))>) (acc: Set<coord>)  =
-            match tilesLeft with
-            |[] -> acc
-            |tile:: tiles -> 
-                let Tcoord = (fst tile)
-                let rightAnchor = (((fst Tcoord) + 1), (snd Tcoord))
-                let leftAnchor = (((fst Tcoord) - 1), (snd Tcoord))
-                let upAnchor = (((fst Tcoord)), (snd Tcoord) - 1) //possible flipped these to y's
-                let downAnchor = (((fst Tcoord)), (snd Tcoord) + 1)
 
-                let anchorsToCheck = [rightAnchor; leftAnchor; upAnchor; downAnchor]  
+        let firstAnchor = fst placedTiles.Head
+        let lastAnchor = fst placedTiles.[placedTiles.Length-1]
 
-                List.fold(fun accFold coord->
-                    match Map.tryFind (coord) st.occupiedSquares with
-                    |Some x -> accFold
-                    |None -> 
-                        Set.add coord accFold //if the anchor is not in occupiedSquares we add it to the set of coors that is our crossset
-                ) acc anchorsToCheck |> aux tiles
+        //check direction
+        let playDirection = 
+            match fst firstAnchor = fst lastAnchor with
+            |true -> Horizontal
+            |false -> Vertical
+            
+        let anchor1 = (firstAnchor, playDirection)
+        let anchor2 = (lastAnchor, playDirection)
+        
+        let addAnchors = 
+            let first = Set.add anchor1 st.possibleAnchors
+            Set.add anchor2 first
 
-        let updatedAnchors = aux placedTiles st.possibleAnchors
-        {st with possibleAnchors = updatedAnchors}
+        {st with possibleAnchors = addAnchors}
