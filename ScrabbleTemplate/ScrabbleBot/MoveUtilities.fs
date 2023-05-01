@@ -26,10 +26,14 @@ let getHandAsList (hand: MultiSet<uint32>) =
     
 let makeMove (result: uint32 list list)(pieces: Map<uint32, tile>) = 
     debugPrint (sprintf "MakeMove called with resultlist of size: %d" result.Length)
-    let wordToPlay = result.Head
-    let coordsTest = [(0,0); (0,1); (0,2); (0,3)]
+
+    let wordToPlay = List.fold(fun (acc: uint32 list) (lst: uint32 list) -> if (lst.Length > acc.Length) then lst else acc) [] result
+
+    //let wordToPlay = result.Head
+    let coordsTest = [(0,0); (0,1); (0,2); (0,3); (0,4); (0,5); (0,6); (0,7); (0,8); (0,9); (0,10)]
 
     let rec aux i acc = 
+        debugPrint "RUNNNING FOREVER"
         if(i < wordToPlay.Length) then
             let letter = wordToPlay.[i]
             let coordToPlay = coordsTest.[i]

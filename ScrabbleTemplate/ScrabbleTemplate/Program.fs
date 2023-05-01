@@ -40,7 +40,7 @@ let main argv =
     // To run, navigate to ScrabbleProject and run the following cmd:
     // dotnet run --project ScrabbleTemplate/ScrabbleTemplate
 
-    let handSize   = 5u
+    let handSize   = 10u
     let timeout    = None
     let tiles      = ScrabbleUtil.English.tiles 1u
     let seed       = None
