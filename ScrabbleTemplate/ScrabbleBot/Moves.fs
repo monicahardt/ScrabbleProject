@@ -199,7 +199,10 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                     |false -> 
                         debugPrint (sprintf "There was not room to the left of the coord: x: %d y: %d. Aka no room to play right, we now check for down \n" (fst pos) (snd pos))//there was not room to the left we want to check up no
                         checkIfDownIsPossible st pos acc
-            checkIfRightIsPossible st pos acc 
+            
+            match snd acc with
+            |Vertical -> checkIfRightIsPossible st pos acc 
+            |Horizontal -> checkIfDownIsPossible st pos acc
         else 
             acc
 
@@ -212,33 +215,6 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
 
     //here we want to check with the board if it is possible to make a word
    
-(*
-let test  (pieces: Map<uint32, tile>) (st: State.state) = 
-    debugPrint "\n***** TEST WAS CALLED *****\n"
-    let testOccS1 = Map.add (0,0) (13u, ('h',1))  st.occupiedSquares
-    let testOccS2 = Map.add (0,1) (5u, ('e',1))  testOccS1
-    let testOccS3 = Map.add (0,2) (10u, ('j',1))  testOccS2
-    let testOccS4 = Map.add (-1,2) (5u, ('e',1))  testOccS3
-    let testOccS5 = Map.add (1,0) (5u, ('i',1))  testOccS4
-
-    let st' = {st with occupiedSquares = testOccS5}
-    let word = [14u; 15u]
-    let startCoord = (-1,2)
-
-    match validateWordWithBoard word startCoord pieces st' with
-    |(true,Vertical) -> 
-            debugPrint "\nit was possible to place the word in the direction\n"
-            makeCoords startCoord Vertical word.Length
-    |(true,Horizontal) -> 
-            debugPrint "\nit was possible to place the word in the direction\n"
-            makeCoords startCoord Horizontal word.Length
-    |(false,Vertical) -> 
-            debugPrint "\nit was impossible to place the word\n"
-            []
-    |(false,Horizontal) -> 
-            debugPrint "\nit was impossible to place the word\n"
-            []
-*)
 
 
 let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict: Dict) (direction: Direction) (pos: coord) (tempWord: uint32 list) (longestWord: uint32 list) (possibleCoords: coord list) (pieces: Map<uint32, tile>) = 
@@ -374,6 +350,7 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
                     //result (i+1) newAcc 
                     result (i+1) acc 
                 else 
+                    debugPrint "We are stuck here"
                     Map.add word coords acc
 
             |None -> failwith "what went wrong"
