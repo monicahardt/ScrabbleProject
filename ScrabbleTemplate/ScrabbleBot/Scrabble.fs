@@ -38,6 +38,7 @@ module Scrabble =
             debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
             Print.printHand pieces (State.hand st)
 
+            test pieces st
             let result = getNextMoveToPlay st pieces
             let move: ((int * int) * (uint32 * (char * int))) list = makeMove result pieces
             send cstream (SMPlay move)
