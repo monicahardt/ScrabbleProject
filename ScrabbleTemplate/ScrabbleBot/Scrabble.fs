@@ -38,9 +38,24 @@ module Scrabble =
             debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
             Print.printHand pieces (State.hand st)
 
-            test pieces st
+            //test pieces st
             let result = getNextMoveToPlay st pieces
-            let move: ((int * int) * (uint32 * (char * int))) list = makeMove result pieces
+            
+            let resultArray = Map.toArray result
+
+            let move = 
+                if resultArray.Length > 0 then
+                    let longestFoundWord = Array.fold(fun (acc: uint32 list) ((word: uint32 list),(coords: coord list))-> if word.Length > acc.Length then word else acc ) [] resultArray
+                    let coordsToWord = result.[longestFoundWord]
+
+                    if st.occupiedSquares.IsEmpty then
+                        makeMove longestFoundWord pieces coordsToWord
+                    else 
+                        makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
+                else 
+                    debugPrint "We could not make a move at all"
+                    []
+            
             send cstream (SMPlay move)
         
             let msg = recv cstream

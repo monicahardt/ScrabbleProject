@@ -22,27 +22,17 @@ let makeAWord (word: uint32 list) (pieces: Map<uint32, tile>): string =
 
 let getHandAsList (hand: MultiSet<uint32>) =
     toList hand     
-    
-let makeMove (result: uint32 list list)(pieces: Map<uint32, tile>) = 
-    debugPrint (sprintf "MakeMove called with resultlist of size: %d" result.Length)
 
-    let wordToPlay = List.fold(fun (acc: uint32 list) (lst: uint32 list) -> if (lst.Length > acc.Length) then lst else acc) [] result
 
-    //let wordToPlay = result.Head
-    let coordsTest = [(0,0); (0,1); (0,2); (0,3); (0,4); (0,5); (0,6); (0,7); (0,8); (0,9); (0,10)]
+let makeMove (result: uint32 list)(pieces: Map<uint32, tile>) (coords: coord list) = 
+    let wordToPlay = result
 
     let rec aux i acc = 
-        debugPrint "RUNNNING FOREVER"
         if(i < wordToPlay.Length) then
             let letter = wordToPlay.[i]
-            let coordToPlay = coordsTest.[i]
+            let coordToPlay = coords.[i]
             let tileToPlay = Set.fold(fun _ (c,i) -> (c,i)) ('å',0) pieces.[letter]
             let thisPiece = (coordToPlay,(letter,tileToPlay))
             aux (i+1) (thisPiece :: acc)
         else acc
     aux 0 []
-
-let getNextCoordinate (pos: coord) (offset: int32) (dir: Direction) =
-    match dir with
-    | Vertical -> (fst pos), (snd pos + offset)
-    | Horizontal -> ((fst pos) + offset, (snd pos))
