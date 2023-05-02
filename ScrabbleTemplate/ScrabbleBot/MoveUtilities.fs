@@ -31,7 +31,9 @@ let makeMove (result: uint32 list)(pieces: Map<uint32, tile>) (coords: coord lis
         if(i < wordToPlay.Length) then
             let letter = wordToPlay.[i]
             let coordToPlay = coords.[i]
-            let tileToPlay = Set.fold(fun _ (c,i) -> (c,i)) ('å',0) pieces.[letter]
+            let tileToPlay = 
+                if letter = 0u then ('A',0)
+                else Set.fold(fun _ (c,i) -> (c,i)) ('å',0) pieces.[letter]
             let thisPiece = (coordToPlay,(letter,tileToPlay))
             aux (i+1) (thisPiece :: acc)
         else acc

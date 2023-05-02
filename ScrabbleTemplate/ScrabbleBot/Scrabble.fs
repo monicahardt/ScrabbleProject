@@ -43,21 +43,19 @@ module Scrabble =
             
             let resultArray = Map.toArray result
 
-            let move = 
-                if resultArray.Length > 0 then
-                    let longestFoundWord = Array.fold(fun (acc: uint32 list) ((word: uint32 list),(coords: coord list))-> if word.Length > acc.Length then word else acc ) [] resultArray
-                    let coordsToWord = result.[longestFoundWord]
+            if resultArray.Length > 0 then
+                let longestFoundWord = Array.fold(fun (acc: uint32 list) ((word: uint32 list),(coords: coord list))-> if word.Length >= acc.Length then word else acc ) [] resultArray
+                let coordsToWord = result.[longestFoundWord]
 
-                    if st.occupiedSquares.IsEmpty then
-                        makeMove longestFoundWord pieces coordsToWord
-                    else 
-                        makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
+                if st.occupiedSquares.IsEmpty then
+                    let move = makeMove longestFoundWord pieces coordsToWord
+                    send cstream (SMPlay move)
                 else 
-                    debugPrint "We could not make a move at all"
-                    []
-            
-            send cstream (SMPlay move)
-        
+                    let move = makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
+                    send cstream (SMPlay move)
+            else 
+                send cstream (SMChange (getHandAsList st.hand))
+                
             let msg = recv cstream
             //debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             
