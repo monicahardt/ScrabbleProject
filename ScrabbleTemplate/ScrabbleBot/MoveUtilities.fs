@@ -26,8 +26,9 @@ let getHandAsList (hand: MultiSet<uint32>) =
 
 let makeMove (result: uint32 list)(pieces: Map<uint32, tile>) (coords: coord list) = 
     let wordToPlay = result
-
+    debugPrint "\nMAKE MOVE BROKEN\n"
     let rec aux i acc = 
+        debugPrint "\nMAKE MOVE UNIFINITY\n"
         if(i < wordToPlay.Length) then
             let letter = wordToPlay.[i]
             let coordToPlay = coords.[i]

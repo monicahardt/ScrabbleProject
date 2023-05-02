@@ -68,7 +68,6 @@ let roomDown (st: State.state) (pos: coord)=
 let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uint32, tile>) (st: State.state) = 
     let (wordString: string) = makeAWord word pieces
     let charArray = wordString.ToCharArray()
-    //debugPrint (sprintf "\nThe word we want to place is: %s\n" wordString)
 
     //loop through the char array
     let rec placeCharOnBoard (i: int) (arr: char array) (pos: coord) (acc: (bool*Direction)) (firstCharPlacedRight: bool) (firstCharPlacedDown: bool) : (bool * Direction) = 
@@ -76,7 +75,7 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
             let charToPlace = arr.[i]
 
             let checkIfDownIsPossible (st: State.state) (pos: coord) (acc: (bool*Direction)) = 
-                //debugPrint "*****CHECKING DOWN*****\n"
+                debugPrint "*****CHECKING DOWN*****\n"
                 if firstCharPlacedDown then 
                     match roomDown st pos with 
                                 |true -> //there was room down so we want to check the left and right from the down space
@@ -87,9 +86,9 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                                 //debugPrint (sprintf "There was room left to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
                                                 match roomDown st downCoord with 
                                                 |true -> //there was room enough down
+                                                        //debugPrint (sprintf "There was room down from to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
                                                         match roomToRight st downCoord with
                                                         |true -> 
-                                                                //debugPrint (sprintf "There was room right to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
                                                                 //we can place tile downwards
                                                                 //debugPrint "\nThe tile could be placed down\n"
                                                                 placeCharOnBoard (i+1) arr.[1..] downCoord (true, Vertical) false true
@@ -119,10 +118,8 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                                 match roomDown st downCoord with 
                                                 |true -> //there was room enough down
                                                         match roomToRight st downCoord with
-                                                        |true -> 
-                                                                //debugPrint (sprintf "There was room right to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
-                                                                //we can place tile downwards
-                                                                debugPrint "\nThe tile could be placed down\n"
+                                                        |true -> //we can place tile downwards
+                                                                //debugPrint "\nThe tile could be placed down\n"
                                                                 placeCharOnBoard (i+1) arr.[1..] downCoord (true, Vertical) false true
                                                         |false -> 
                                                             //debugPrint (sprintf "There was not room right to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
@@ -151,23 +148,32 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                     match roomUp st rightCoord with 
                                     |true -> 
                                         //debugPrint (sprintf "There was room up from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
-                                        match roomToRight st rightCoord with
-                                        |true -> //we can place tile to the right
-                                            debugPrint (sprintf "There was room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
-                                            debugPrint "\nThe tile could be placed to the right\n"
-                                            placeCharOnBoard (i+1) arr.[1..] rightCoord (true, Horizontal) true false
+                                        match roomDown st rightCoord with
+                                        |true ->
+                                            match roomToRight st rightCoord with
+                                            |true -> //we can place tile to the right
+                                                //debugPrint "\nThe tile could be placed to the right\n"
+                                                placeCharOnBoard (i+1) arr.[1..] rightCoord (true, Horizontal) true false
+                                            |false -> 
+                                                debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
+                                                //(false, Horizontal) //we could not play right
+                                                //checkIfDownIsPossible st pos acc
+                                                placeCharOnBoard (i+1) arr pos (false, Vertical) false false
                                         |false -> 
-                                            //debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
-                                            //(false, Horizontal) //we could not play right
-                                            checkIfDownIsPossible st pos acc 
+                                            //debugPrint (sprintf "There was not room down from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
+                                            //(false, Horizontal)
+                                            //checkIfDownIsPossible st pos acc 
+                                            placeCharOnBoard (i+1) arr pos (false, Vertical) false false
                                     |false -> 
                                         //debugPrint (sprintf "There was not room up the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
                                         //(false, Horizontal)
-                                        checkIfDownIsPossible st pos acc 
+                                        //checkIfDownIsPossible st pos acc 
+                                        placeCharOnBoard (i+1) arr pos (false, Vertical) false false
                             |false ->  
                                 //debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst pos) (snd pos))//there was room up from the right coord
                                 //(false, Horizontal)
-                                checkIfDownIsPossible st pos acc
+                                //checkIfDownIsPossible st pos acc
+                                placeCharOnBoard (i+1) arr pos (false, Vertical) false false
 
 
                 else
@@ -181,26 +187,36 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                     match roomUp st rightCoord with 
                                     |true -> 
                                         //debugPrint (sprintf "There was room up from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
-                                        match roomToRight st rightCoord with
-                                        |true -> //we can place tile to the right
-                                            debugPrint (sprintf "There was room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
-                                            debugPrint "\nThe tile could be placed to the right\n"
-                                            placeCharOnBoard (i+1) arr.[1..] rightCoord (true, Horizontal) true false
+                                        match roomDown st rightCoord with
+                                        |true -> 
+                                            //debugPrint (sprintf "There was room down from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
+                                            match roomToRight st rightCoord with
+                                            |true -> //we can place tile to the right
+                                                //debugPrint "\nThe tile could be placed to the right\n"
+                                                placeCharOnBoard (i+1) arr.[1..] rightCoord (true, Horizontal) true false
+                                            |false -> 
+                                                //debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
+                                                //(false, Horizontal) //we could not play right
+                                                //checkIfDownIsPossible st pos acc 
+                                                placeCharOnBoard (i+1) arr pos (false, Vertical) false false
                                         |false -> 
-                                            //debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
-                                            //(false, Horizontal) //we could not play right
-                                            checkIfDownIsPossible st pos acc 
+                                            //debugPrint (sprintf "There was not room down from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
+                                            //checkIfDownIsPossible st pos acc 
+                                            placeCharOnBoard (i+1) arr pos (false, Vertical) false false
                                     |false -> 
                                         //debugPrint (sprintf "There was not room up the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
                                         //(false, Horizontal)
-                                        checkIfDownIsPossible st pos acc 
+                                        //checkIfDownIsPossible st pos acc 
+                                        placeCharOnBoard (i+1) arr pos (false, Vertical) false false
                             |false ->  
                                 //debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst pos) (snd pos))//there was room up from the right coord
                                 //(false, Horizontal)
-                                checkIfDownIsPossible st pos acc
+                                //checkIfDownIsPossible st pos acc
+                                placeCharOnBoard (i+1) arr pos (false, Vertical) false false
                     |false -> 
                         //debugPrint (sprintf "There was not room to the left of the coord: x: %d y: %d. Aka no room to play right, we now check for down \n" (fst pos) (snd pos))//there was not room to the left we want to check up no
-                        checkIfDownIsPossible st pos acc
+                        //checkIfDownIsPossible st pos acc
+                        placeCharOnBoard (i+1) arr pos (false, Vertical) false false
             
             match snd acc with
             |Horizontal -> checkIfRightIsPossible st pos acc 
@@ -210,13 +226,10 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
 
     placeCharOnBoard 0 charArray startPos (false, Horizontal) false false //we always want to check if we can play right first, since this function calls the left check if it was not possible
 
-
     //i starting at 1 because the first letter i already on the board. The starting position should therefore be
     //the coordinate belonging to the tile on the board
     //here we want to check with the board if it is possible to make a word
    
-
-
 let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict: Dict) (direction: Direction) (pos: coord) (tempWord: uint32 list) (longestWord: uint32 list) (possibleCoords: coord list) (pieces: Map<uint32, tile>) = 
         let currentHandList = getHandAsList currentHand
         //debugPrint (sprintf "\nsize of the hand is now: %d \n" currentHandList.Length)
@@ -230,68 +243,52 @@ let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict:
             |true -> 
                 let wordToPlayFromThisCharOnBoard = makeAWord (List.rev longestWord) pieces
                 debugPrint (sprintf "\n********The longest word found that is placeable and in dictionary is: %s*******\n" wordToPlayFromThisCharOnBoard)
-                ((List.rev longestWord), possibleCoords)
+                
+                if currentHandList.Length = 0 then
+                    debugPrint "WE ARE STUCK HERE FOREVER"
+                    ((List.rev longestWord), possibleCoords) 
+                else 
+                    let myHand = removeSingle (currentHandList.Head) currentHand
+                    debugPrint "WE ARE STUCK HERE FOREVER"
+                    firstAux st myHand currentDict direction pos [] longestWord [] pieces 
             |_ -> 
                 //debugPrint "\n Empty hand found no word\n"
                 ([], possibleCoords)
         |x::xs ->
-            // check for wildcard, hardcode it to an A            
-            //let x' = if (x = 0u)  then 1u else x
-            let x' = x
+            // check for wildcard, hardcode it to an A           
             //debugPrint "\nTHE HAND WAS NOT EMPTY \n"
             //debugPrint "We are not done looping the hand"
             //try stepping the first in the list at hand
-            match nextDict currentDict x' pieces with 
+            match nextDict currentDict x pieces with 
             |Some(b,d) ->
                 //debugPrint (sprintf "Stepped the char: %d there was a path" x)
                 if b then
                     //debugPrint "\n** MADE A WORD **\n"
-                    let newTempWord = x' :: (tempWord)
-                    //debugPrint (sprintf "\nPrinting the word made: %s\n" wordString)
-                    let newHand = removeSingle x' currentHand
-                    
-                    let possibleCoords = 
-                        match validateWordWithBoard (List.rev newTempWord) pos pieces st with 
-                            |(true,Vertical) -> 
-                                //debugPrint "\nit was possible to place the word in the direction\n"
-                                makeCoords pos Vertical newTempWord.Length
-                            |(true,Horizontal) -> 
-                                //debugPrint "\nit was possible to place the word in the direction\n"
-                                makeCoords pos Horizontal newTempWord.Length
-                            |(false,Vertical) -> 
-                                //debugPrint "\nit was impossible to place the word\n"
-                                []
-                            |(false,Horizontal) -> 
-                                //ebugPrint "\nit was impossible to place the word\n"
-                                []
+                    let newTempWord = x :: (tempWord)
+                    let wordString = makeAWord (List.rev newTempWord) pieces
+                    debugPrint (sprintf "\nPrinting the word made: %s\n" wordString)
+                    let newHand = removeSingle x currentHand
 
-                    match possibleCoords with
-                    |[] ->  
-                        //it was not possible to place the word on the board
-                        firstAux st newHand d direction pos tempWord longestWord possibleCoords pieces
-                        //firstAux st newHand d direction pos newTempWord longestWord possibleCoords pieces
-                    |_ -> //it was possible so we check if this word is longer than the current longest word *)
-                        if(newTempWord.Length >= longestWord.Length) then
-                            let newLongestWord = newTempWord
-                            debugPrint "\n** FOUND A LONGER WORD THAN WE ALREADY HAVE **\n"
-                            let wordMade = makeAWord (List.rev newLongestWord) pieces
-                            debugPrint (sprintf "\n******* The newly made longest placeable word is: %s ******\n" wordMade)
-                            //see if we can find an even longer word
-                            firstAux st newHand d direction pos newTempWord newLongestWord possibleCoords pieces
-                        else 
-                            //debugPrint "\n** DID NOT FIND A LONGER WORD THAN WE ALREADY HAVE **\n"
-                            firstAux st newHand d direction pos newTempWord longestWord possibleCoords pieces
+                    if(newTempWord.Length > longestWord.Length) then
+                        let newLongestWord = x :: (longestWord)
+                        //let newLongestWord = newTempWord
+                        debugPrint "\n** FOUND A LONGER WORD THAN WE ALREADY HAVE **\n"
+                        //see if we can find an even longer word
+                        firstAux st newHand d direction pos newTempWord newLongestWord [] pieces
+                    else 
+                        //debugPrint "\n** DID NOT FIND A LONGER WORD THAN WE ALREADY HAVE **\n"
+                        firstAux st newHand d direction pos newTempWord longestWord [] pieces
                 else 
                     //debugPrint "There was a path but no word ended"
-                    let newTempWord = x' :: (tempWord) //added the id to the back of the list word
+                    let newTempWord = x :: (tempWord) //added the id to the back of the list word
                     let updatedHand = List.fold(fun acc id -> 
                                                             removeSingle id acc) st.hand newTempWord
                     //let updatedHand = removeSingle x currentHand
-                    firstAux st updatedHand d direction pos newTempWord longestWord possibleCoords pieces
+                    firstAux st updatedHand d direction pos newTempWord longestWord [] pieces
             |None ->
                 //debugPrint (sprintf "Stepped the char: %d there was not a path" x)
-                let idRemovedFromHand = removeSingle x' currentHand 
-                firstAux st idRemovedFromHand currentDict direction pos longestWord longestWord possibleCoords pieces
+                let idRemovedFromHand = removeSingle x currentHand 
+                firstAux st idRemovedFromHand currentDict direction pos tempWord longestWord [] pieces
                 
 //This is the function mentioned by Jesper
 //Should generate a list of valid moves
@@ -317,9 +314,7 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
 
             match firstStep with 
             |Some(b,d) -> 
-                debugPrint "YOOOOOOOÓ"
                 let myHand = if handList.[i] = 0u then removeSingle 0u currentHand else removeSingle nowChar currentHand
-                debugPrint "YOOOOOOOWE GET HERE!!!"
                 let (word, coords) = firstAux st myHand d direction startPos [nowChar] [nowChar] [] pieces
                 let newAcc = Map.add word coords acc
                 result (i+1) newAcc
@@ -332,13 +327,14 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
                                     debugPrint "\n"
                                     List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) lst)
                                     () resultListOfList   
-    *)
+    
     Map.fold(fun acc k v -> 
                         debugPrint "\n**WORD**\n"
                         List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) k
                         debugPrint "\n**Coord**\n"
                         List.iter(fun coord -> debugPrint (sprintf "x: %d y: %d \n" (fst coord) (snd coord))) v
-    )() resultMap
+    )() resultMap*)
+    debugPrint "\n **** WE GET HERE ****\n"
     resultMap                                    
                                    
 
@@ -389,7 +385,9 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
                         debugPrint "\n**WORD**\n"
                         List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) k
                         debugPrint "\n**Coord**\n"
+                        debugPrint "\nWe get here\n"
                         List.iter(fun coord -> debugPrint (sprintf "x: %d y: %d \n" (fst coord) (snd coord))) v
+                        debugPrint "\nWe get here1\n"
     )() resultMap
     resultMap                                    
                
