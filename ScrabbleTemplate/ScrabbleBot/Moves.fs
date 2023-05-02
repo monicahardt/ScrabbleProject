@@ -234,10 +234,15 @@ let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict:
                 //debugPrint "\n Empty hand found no word\n"
                 ([], possibleCoords)
         |x::xs ->
+            // check for wildcard, hardcode it to an A            
+            let x' = 
+                if x = 0u then 1u
+                else x
+
             //debugPrint "\nTHE HAND WAS NOT EMPTY \n"
             //debugPrint "We are not done looping the hand"
             //try stepping the first in the list at hand
-            match nextDict currentDict x pieces with 
+            match nextDict currentDict x' pieces with 
             |Some(b,d) ->
                 //debugPrint (sprintf "Stepped the char: %d there was a path" x)
                 if b then
@@ -299,7 +304,11 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
         then 
             acc 
         else 
-            let nowChar = handList.[i] 
+            // check for wildcard, hardcode it to an A     
+            let nowChar =     
+                if handList.[i] = 0u then 1u 
+                else handList.[i]
+
             let firstStep = nextDict currentDict nowChar pieces
             match firstStep with 
             |Some(b,d) -> 
