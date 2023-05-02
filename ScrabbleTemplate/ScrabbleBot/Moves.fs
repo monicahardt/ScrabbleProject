@@ -20,8 +20,8 @@ let rec makeHorizontalCoords (i: int) (startCoord: coord) (wordLength: int) (acc
         makeHorizontalCoords (i+1) startCoord wordLength newAcc
     else 
         let coordsToReturn = List.rev(acc)
-        debugPrint "\n*** THE LIST OF COORDS MADE ***\n"
-        List.fold(fun acc coord -> debugPrint (sprintf "x: %d y: %d\n" (fst coord) (snd coord))) () coordsToReturn
+        //debugPrint "\n*** THE LIST OF COORDS MADE ***\n"
+        //List.fold(fun acc coord -> debugPrint (sprintf "x: %d y: %d\n" (fst coord) (snd coord))) () coordsToReturn
         coordsToReturn
 let rec makeVerticalCoords (i: int) (startCoord: coord) (wordLength: int) (acc: coord list) : (coord list) =
     if i < wordLength then  
@@ -30,8 +30,8 @@ let rec makeVerticalCoords (i: int) (startCoord: coord) (wordLength: int) (acc: 
         makeVerticalCoords (i+1) startCoord wordLength newAcc
     else 
         let coordsToReturn = List.rev(acc)
-        debugPrint "\n*** THE LIST OF COORDS MADE ***\n"
-        List.fold(fun acc coord -> debugPrint (sprintf "x: %d y: %d\n" (fst coord) (snd coord))) () coordsToReturn
+        //debugPrint "\n*** THE LIST OF COORDS MADE ***\n"
+        //List.fold(fun acc coord -> debugPrint (sprintf "x: %d y: %d\n" (fst coord) (snd coord))) () coordsToReturn
         coordsToReturn
 
 let makeCoords (startCoord: coord) (direction: Direction) (wordLength: int) =
@@ -201,18 +201,16 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                         checkIfDownIsPossible st pos acc
             
             match snd acc with
-            |Vertical -> checkIfRightIsPossible st pos acc 
-            |Horizontal -> checkIfDownIsPossible st pos acc
+            |Horizontal -> checkIfRightIsPossible st pos acc 
+            |Vertical -> checkIfDownIsPossible st pos acc
         else 
             acc
 
-    placeCharOnBoard 0 charArray startPos (false, Vertical) false
+    placeCharOnBoard 0 charArray startPos (false, Horizontal) false //we always want to check if we can play right first, since this function calls the left check if it was not possible
 
 
     //i starting at 1 because the first letter i already on the board. The starting position should therefore be
     //the coordinate belonging to the tile on the board
-
-
     //here we want to check with the board if it is possible to make a word
    
 
@@ -228,7 +226,8 @@ let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict:
             //checking if what we found is a valid word
             match lookup (makeAWord (List.rev longestWord) pieces) st.dict with
             |true -> 
-                //debugPrint "\nEmpty hand found a word\n"
+                let wordToPlayFromThisCharOnBoard = makeAWord (List.rev longestWord) pieces
+                debugPrint (sprintf "\n********The longest word found that is placeable and in dictionary is: %s*******\n" wordToPlayFromThisCharOnBoard)
                 ((List.rev longestWord), possibleCoords)
             |_ -> 
                 //debugPrint "\n Empty hand found no word\n"
@@ -243,44 +242,47 @@ let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict:
                 if b then
                     //debugPrint "\n** MADE A WORD **\n"
                     let newTempWord = x :: (tempWord)
-                    let (wordString: string) = makeAWord newTempWord pieces
                     //debugPrint (sprintf "\nPrinting the word made: %s\n" wordString)
                     let newHand = removeSingle x currentHand
                     
                     let possibleCoords = 
                         match validateWordWithBoard (List.rev newTempWord) pos pieces st with 
                             |(true,Vertical) -> 
-                                debugPrint "\nit was possible to place the word in the direction\n"
+                                //debugPrint "\nit was possible to place the word in the direction\n"
                                 makeCoords pos Vertical newTempWord.Length
                             |(true,Horizontal) -> 
-                                debugPrint "\nit was possible to place the word in the direction\n"
+                                //debugPrint "\nit was possible to place the word in the direction\n"
                                 makeCoords pos Horizontal newTempWord.Length
                             |(false,Vertical) -> 
-                                debugPrint "\nit was impossible to place the word\n"
+                                //debugPrint "\nit was impossible to place the word\n"
                                 []
                             |(false,Horizontal) -> 
-                                debugPrint "\nit was impossible to place the word\n"
+                                //ebugPrint "\nit was impossible to place the word\n"
                                 []
 
                     match possibleCoords with
                     |[] ->  
-                        //it was not possible to place the word
-                        firstAux st newHand d direction pos newTempWord longestWord possibleCoords pieces
+                        //it was not possible to place the word on the board
+                        firstAux st newHand d direction pos tempWord longestWord possibleCoords pieces
+                        //firstAux st newHand d direction pos newTempWord longestWord possibleCoords pieces
                     |_ -> //it was possible so we check if this word is longer than the current longest word *)
                         if(newTempWord.Length > longestWord.Length) then
-                            //debugPrint "\n** FOUND A LONGER WORD THAN WE ALREADY HAVE **\n"
-                            let newLongestWord = x :: (longestWord)
+                            let newLongestWord = newTempWord
+                            debugPrint "\n** FOUND A LONGER WORD THAN WE ALREADY HAVE **\n"
+                            let wordMade = makeAWord (List.rev newLongestWord) pieces
+                            debugPrint (sprintf "\n******* The newly made longest placeable word is: %s ******\n" wordMade)
+                            //see if we can find an even longer word
                             firstAux st newHand d direction pos newTempWord newLongestWord possibleCoords pieces
                         else 
                             //debugPrint "\n** DID NOT FIND A LONGER WORD THAN WE ALREADY HAVE **\n"
                             firstAux st newHand d direction pos newTempWord longestWord possibleCoords pieces
                 else 
                     //debugPrint "There was a path but no word ended"
-                    let longestWord = x :: (longestWord) //added the id to the back of the list word
+                    let newTempWord = x :: (tempWord) //added the id to the back of the list word
                     let updatedHand = List.fold(fun acc id -> 
-                                                            removeSingle id acc) st.hand longestWord
+                                                            removeSingle id acc) st.hand newTempWord
                     //let updatedHand = removeSingle x currentHand
-                    firstAux st updatedHand d direction pos longestWord longestWord possibleCoords pieces
+                    firstAux st updatedHand d direction pos newTempWord longestWord possibleCoords pieces
             |None ->
                 //debugPrint (sprintf "Stepped the char: %d there was not a path" x)
                 let idRemovedFromHand = removeSingle x currentHand 
@@ -332,8 +334,10 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
     let allOccupiedSqaures = st.occupiedSquares
     let occSquaresList = Map.toList allOccupiedSqaures 
 
+
+    //try to compare the words length that we can place
     //looping the board now
-    let rec result (i: int) (acc: Map<uint32 list, coord list> ) = 
+    let rec result (i: int) (acc: Map<uint32 list, coord list> ) (longestWordPlaceable: uint32 list) = 
         if i > occSquaresList.Length-1 
         then 
             acc 
@@ -348,14 +352,19 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
                 if word.IsEmpty then 
                     //let newAcc = Map.add word coords acc
                     //result (i+1) newAcc 
-                    result (i+1) acc 
+                    debugPrint "The word was empty\n"
+                    result (i+1) acc []
                 else 
-                    debugPrint "We are stuck here"
-                    Map.add word coords acc
+                    if word.Length > longestWordPlaceable.Length then   
+                        debugPrint "We found a longer word to play from the board\n"
+                        Map.add word coords acc
+                    else 
+                        debugPrint "We did not find a longer word to play from the board\n"
+                        result (i+1) acc []
 
             |None -> failwith "what went wrong"
 
-    result 0 Map.empty
+    result 0 Map.empty []
                 
 
 
