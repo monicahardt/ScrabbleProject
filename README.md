@@ -9,7 +9,7 @@ The outcome of the project is to develop a ScrabbleBot, that can find and play v
 ## Project & points
 
 - Uses trie
-- Implemented our own dictionary (0.5 point)
+- Implemented our own dictionary and can play multiple players (1 point)
 - Finish a game against yourself on an infinite board (2 point)
   - Does not take points into account
   - Iterates over all combinations of valid words, and plays the longest word possible
