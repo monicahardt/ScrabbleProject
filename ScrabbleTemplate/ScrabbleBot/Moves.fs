@@ -229,78 +229,40 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
     //i starting at 1 because the first letter i already on the board. The starting position should therefore be
     //the coordinate belonging to the tile on the board
     //here we want to check with the board if it is possible to make a word
-   
-let rec firstAux (st: State.state) (currentHand: MultiSet<uint32>) (currentDict: Dict) (direction: Direction) (pos: coord) (tempWord: uint32 list) (longestWord: uint32 list) (possibleCoords: coord list) (pieces: Map<uint32, tile>) = 
-        let currentHandList = getHandAsList currentHand
-        //debugPrint (sprintf "\nsize of the hand is now: %d \n" currentHandList.Length)
-        // List.iter(fun id -> debugPrint (id.ToString() + "\n")) currentHandList
-        match currentHandList with 
-        |[] -> 
-            //debugPrint "\nTHE HAND WAS EMPTY \n"
-            //debugPrint "We are done looping the hand"
-            //checking if what we found is a valid word
-            match lookup (makeAWord (List.rev longestWord) pieces) st.dict with
-            |true -> 
-                let wordToPlayFromThisCharOnBoard = makeAWord (List.rev longestWord) pieces
-                debugPrint (sprintf "\n********The longest word found that is placeable and in dictionary is: %s*******\n" wordToPlayFromThisCharOnBoard)
-                
-                if currentHandList.Length = 0 then
-                    ((List.rev longestWord), possibleCoords) 
-                else 
-                    let myHand = removeSingle (currentHandList.Head) currentHand
 
-                    firstAux st myHand currentDict direction pos [] longestWord [] pieces 
-            |_ -> 
-                //debugPrint "\n Empty hand found no word\n"
-                ([], possibleCoords)
-        |x::xs ->
-            // check for wildcard, hardcode it to an A           
-            //debugPrint "\nTHE HAND WAS NOT EMPTY \n"
-            //debugPrint "We are not done looping the hand"
-            //try stepping the first in the list at hand
-            match nextDict currentDict x pieces with 
-            |Some(b,d) ->
-                //debugPrint (sprintf "Stepped the char: %d there was a path" x)
-                if b then
-                    //debugPrint "\n** MADE A WORD **\n"
-                    let newTempWord = x :: (tempWord)
-                    let wordString = makeAWord (List.rev newTempWord) pieces
-                    debugPrint (sprintf "\nPrinting the word made: %s\n" wordString)
-                    let newHand = removeSingle x currentHand
-
-                    if(newTempWord.Length > longestWord.Length) then
-                        let newLongestWord = x :: (longestWord)
-                        //let newLongestWord = newTempWord
-                        debugPrint "\n** FOUND A LONGER WORD THAN WE ALREADY HAVE **\n"
-                        //see if we can find an even longer word
-                        firstAux st newHand d direction pos newTempWord newLongestWord [] pieces
-                    else 
-                        //debugPrint "\n** DID NOT FIND A LONGER WORD THAN WE ALREADY HAVE **\n"
-                        firstAux st newHand d direction pos newTempWord longestWord [] pieces
-                else 
-                    //debugPrint "There was a path but no word ended"
-                    let newTempWord = x :: (tempWord) //added the id to the back of the list word
-                    let updatedHand = List.fold(fun acc id -> 
-                                                            removeSingle id acc) st.hand newTempWord
-                    //let updatedHand = removeSingle x currentHand
-                    firstAux st updatedHand d direction pos newTempWord longestWord [] pieces
-            |None ->
-                //debugPrint (sprintf "Stepped the char: %d there was not a path" x)
-                let idRemovedFromHand = removeSingle x currentHand 
-                firstAux st idRemovedFromHand currentDict direction pos tempWord longestWord [] pieces
-
-let validateWordsFound (st: State.state) (pieces: Map<uint32, tile>) (wordsFound: uint32 list list)  = 
-    List.fold(fun (longestWord: uint32 list) word -> 
+let validateWordsFound (st: State.state) (pieces: Map<uint32, tile>) (wordsFound: uint32 list list) (pos: coord) = 
+    List.fold(fun (acc: (uint32 list * coord list)) word -> 
                 //check if the word can be placed
                 let myWord = makeAWord (List.rev word) pieces
                 match lookup myWord st.dict with
                 |true -> 
                     debugPrint (sprintf "\n MADE A WORD: %s \n" myWord)
-                    if word.Length > longestWord.Length then (List.rev word) else longestWord
-                |false -> longestWord
-                ) [] wordsFound
+                    let possibleCoords = 
+                         match validateWordWithBoard (List.rev word) pos pieces st with 
+                             |(true,Vertical) -> 
+                                 //debugPrint "\nit was possible to place the word in the direction\n"
+                                 makeCoords pos Vertical word.Length
+                             |(true,Horizontal) -> 
+                                 //debugPrint "\nit was possible to place the word in the direction\n"
+                                 makeCoords pos Horizontal word.Length
+                             |(false,_) -> []
 
-let rec stepToRest (st: State.state) (hand: MultiSet<uint32>) (dict: Dict) (wordToBuild: uint32 list) (pieces: Map<uint32, tile>) (outerAcc: uint32 list list) = 
+                    match possibleCoords with
+                    |[] ->  
+                        //it was not possible to place the word on the board
+                        acc
+                      
+                    |_ -> //it was possible so we check if this word is longer than the current longest word *)
+                        if word.Length > (fst acc).Length then 
+                            ((List.rev word), possibleCoords) 
+                        else 
+                            acc
+                    
+                |false -> acc
+
+                ) ([], []) wordsFound
+
+let rec stepToRest (st: State.state) (hand: MultiSet<uint32>) (dict: Dict) (wordToBuild: uint32 list) (pieces: Map<uint32, tile>) (outerAcc: uint32 list list) (pos: coord)= 
         MultiSet.fold(fun acc id numOf -> 
             let word = wordToBuild
             match nextDict dict id pieces with 
@@ -309,15 +271,13 @@ let rec stepToRest (st: State.state) (hand: MultiSet<uint32>) (dict: Dict) (word
                 let updatedHand = removeSingle id hand
                 if b then
                     let updatedAcc = updatedWord :: acc
-                    stepToRest st updatedHand d updatedWord pieces updatedAcc
+                    stepToRest st updatedHand d updatedWord pieces updatedAcc pos
                 else
-                    stepToRest st updatedHand d updatedWord pieces acc
+                    stepToRest st updatedHand d updatedWord pieces acc pos
             |None -> acc
                 //there was not a path
         ) outerAcc hand
 
-  
-    
                 
 //This is the function mentioned by Jesper
 //Should generate a list of valid moves
@@ -326,27 +286,6 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
     let currentHand = if contains 0u st.hand then removeSingle 0u st.hand else st.hand
     let handList = getHandAsList st.hand
     let currentDict = st.dict
-
-
-    let nowChar = handList.[0] 
-    let firstStep = 
-        if handList.[0] = 0u then 
-            nextDict currentDict 1u pieces
-        else 
-            nextDict currentDict nowChar pieces
-
-    match firstStep with 
-    |Some(b,d) -> 
-        let myHand = if handList.[0] = 0u then removeSingle 0u currentHand else removeSingle nowChar currentHand
-        let wordsInListOfList = stepToRest st myHand d [nowChar] pieces []
-        let validatedLongestWord = validateWordsFound st pieces wordsInListOfList 
-   
-        debugPrint (sprintf "\nThe size of the list of long words: %d\n" validatedLongestWord.Length)
-        debugPrint (sprintf "\n*************************Printing the longest word found: %s\n" (makeAWord validatedLongestWord pieces))
-    |None -> failwith "what went wrong"
-
-    Map.empty
-(*
 
     //looping our hand
     let rec result (i: int) (acc: Map<uint32 list, coord list> ) = 
@@ -365,35 +304,17 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
             match firstStep with 
             |Some(b,d) -> 
                 let myHand = if handList.[i] = 0u then removeSingle 0u currentHand else removeSingle nowChar currentHand
+                let wordsInListOfList = stepToRest st myHand d [nowChar] pieces [] startPos
+                let (word, coords) = validateWordsFound st pieces wordsInListOfList startPos
+                debugPrint (sprintf "\nThe size of the list of long words: %d\n" word.Length)
+                debugPrint (sprintf "\n*************************Printing the longest word found: %s\n" (makeAWord word pieces))
+                let newAcc = Map.add word coords acc
+                result (i+1) newAcc
 
-                let word = stepToRest st myHand d [nowChar] pieces []
-                let longestWordFound = word.Head
-                debugPrint (sprintf "\nThe size of the list of long words: %d\n" longestWordFound.Length)
-                debugPrint (sprintf "\n*************************Printing the longest word found: %s\n" (makeAWord longestWordFound pieces))
-
-                //let (word, coords) = firstAux st myHand d direction startPos [nowChar] [nowChar] [] pieces
-
-                //let newAcc = Map.add word coords acc
-                //result (i+1) newAcc
-                result (i+1) acc
             |None -> failwith "what went wrong"
     let resultMap = result 0 Map.empty 
-    *)
-    //debugPrint "\nTHE FIRST WORDS FROM EACH LETTER IN HAND WE CAN PLAY ARE\n"
-    (*
-    List.fold(fun acc lst -> 
-                                    debugPrint "\n"
-                                    List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) lst)
-                                    () resultListOfList   
-    
-    Map.fold(fun acc k v -> 
-                        debugPrint "\n**WORD**\n"
-                        List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) k
-                        debugPrint "\n**Coord**\n"
-                        List.iter(fun coord -> debugPrint (sprintf "x: %d y: %d \n" (fst coord) (snd coord))) v
-    )() resultMap*)
-    //debugPrint "\n **** WE GET HERE ****\n"
-    //resultMap                                    
+
+    resultMap                                    
                                    
 
 let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direction: Direction)  = 
@@ -403,7 +324,6 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
     let allOccupiedSqaures = st.occupiedSquares
     let occSquaresList = Map.toList allOccupiedSqaures 
 
-
     //try to compare the words length that we can place
     //looping the board now
     let rec result (i: int) (acc: Map<uint32 list, coord list> ) (longestWordPlaceable: uint32 list) = 
@@ -412,26 +332,28 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
             acc 
         else 
             let nowChar = if (fst(snd occSquaresList.[i])) = 0u then 
-                                debugPrint "WE GOT A WILDCARD SOMETHING GOES WRONG1"
+                                //debugPrint "WE GOT A WILDCARD SOMETHING GOES WRONG1"
                                 1u else (fst(snd occSquaresList.[i]))
 
-            debugPrint (sprintf "THE CHAR ON THE BOARD WE ARE LOOKING AT IS: %c \n" (getCharFromId pieces nowChar))
+            //debugPrint (sprintf "THE CHAR ON THE BOARD WE ARE LOOKING AT IS: %c \n" (getCharFromId pieces nowChar))
             let newStartCoord = fst occSquaresList.[i] 
             let firstStep = nextDict currentDict nowChar pieces
             match firstStep with 
             |Some(b,d) -> 
-                let (word, coords) = firstAux st currentHand d direction newStartCoord [nowChar] [nowChar] [] pieces
+                let wordsInListOfList = stepToRest st currentHand d [nowChar] pieces [] startPos
+                let (word, coords) = validateWordsFound st pieces wordsInListOfList newStartCoord
+                //let (word, coords) = firstAux st currentHand d direction newStartCoord [nowChar] [nowChar] [] pieces
                 //if the word is an empty list we cannot make a word with this tile already on the board
                 if word.IsEmpty then 
                     //we could not make a word with this tile on the board
                     result (i+1) acc longestWordPlaceable
                 else 
+                    //play to the right if possible
                     if word.Length >= longestWordPlaceable.Length then   
                         debugPrint "We found a longer word to play from the board\n"
                         let newAcc = Map.add word coords acc
                         result (i+1) newAcc word
                     else 
-                        debugPrint "We did not find a longer word to play from the board\n"
                         result (i+1) acc longestWordPlaceable
 
             |None -> failwith "what went wrong"
@@ -443,13 +365,11 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
                         debugPrint "\n**WORD**\n"
                         List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) k
                         debugPrint "\n**Coord**\n"
-                        debugPrint "\nWe get here\n"
                         List.iter(fun coord -> debugPrint (sprintf "x: %d y: %d \n" (fst coord) (snd coord))) v
-                        debugPrint "\nWe get here1\n"
+                     
     )() resultMap
     resultMap                                    
                
-                
 
 
 let getNextMoveToPlay (st: State.state) (pieces: Map<uint32,tile>) = 
