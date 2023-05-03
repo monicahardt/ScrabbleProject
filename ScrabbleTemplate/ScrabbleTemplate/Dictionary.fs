@@ -1,12 +1,10 @@
 module internal Dictionary
 
 open System.Collections.Generic
-open System.Linq
-open ScrabbleUtil.DebugPrint
 
 type Dict =
     |Leaf of bool
-    |Node of bool * System.Collections.Generic.Dictionary<char, Dict>
+    |Node of bool * Dictionary<char, Dict>
     
 let Empty () = Leaf false
 

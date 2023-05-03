@@ -1,6 +1,5 @@
 module internal Dictionary
 
-//This is the signature file
 type Dict 
     val Empty : unit -> Dict
     val insert : string -> Dict -> Dict
