@@ -15,7 +15,7 @@ The outcome of the project is to develop a ScrabbleBot, that can find and play v
   - Iterates over all combinations of valid words, and plays the longest word possible
   - Checks *every* letter on the board (doesn't use anchorpoints)
 
-Arguing that the final points should be 2.5 points.
+Arguing that the final points should be 3 points.
 
 ## Running
 
