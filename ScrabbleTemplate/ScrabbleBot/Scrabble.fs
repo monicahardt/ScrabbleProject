@@ -40,29 +40,26 @@ module Scrabble =
 
             //test pieces st
             let result = getNextMoveToPlay st pieces
-            debugPrint "\nStuch after result\n"
             
             let resultArray = Map.toArray result
-            
-            debugPrint "Successfully made the result to a resultArray \n"
-
             if resultArray.Length > 0 then
-                debugPrint "\nresultarray was bigger than 0\n"
                 let longestFoundWord = Array.fold(fun (acc: uint32 list) ((word: uint32 list),(coords: coord list))-> if word.Length >= acc.Length then word else acc ) [] resultArray
                 let coordsToWord = result.[longestFoundWord]
 
                 if st.occupiedSquares.IsEmpty then
-                    debugPrint "\noccupied squares was empty\n"
+                    //debugPrint "\noccupied squares was empty\n"
                     let move = makeMove longestFoundWord pieces coordsToWord
-                    debugPrint "\nMADE THE MOVE\n"
+                    //debugPrint "\nMADE THE MOVE\n"
                     send cstream (SMPlay move)
                 else 
-                    debugPrint "\noccupied squares was not empty\n"
+                    //debugPrint "\noccupied squares was not empty\n"
+                    let word =  makeAWord (longestFoundWord) pieces
+                    debugPrint (sprintf "\nTHE WORD WE ARE PLAYING IS: %s\n" word)
                     let move = makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
-                    debugPrint "\nMADE THE MOVE NOT FIRST\n"
+                    //debugPrint "\nMADE THE MOVE NOT FIRST\n"
                     send cstream (SMPlay move)
             else 
-                debugPrint "\n ResultArray was smaller than 0. Changing tiles. \n"
+                debugPrint "\nWE COULD NOT PLACE A WORD SWAPPING TILES\n"
                 send cstream (SMChange (getHandAsList st.hand))
                 
             let msg = recv cstream
