@@ -21,8 +21,7 @@ let getCrossSet (dict: Dictionary.Dict) : Set<char> =
         match letters with
         | [] -> allowed
         | c :: cs ->
-            //is there exists a step towards the letter we add it, if not we don't
-            //do we need to check here if a word ends?
+            //if there exists a step towards the letter we add it, if not we don't
             match Dictionary.step c dict with
             | Some _ -> aux dict cs (Set.add c allowed)
             | None -> aux dict cs allowed

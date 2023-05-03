@@ -5,8 +5,6 @@ open ScrabbleUtil.DebugPrint
 open ScrabbleUtil
 open MultiSet
 open MoveUtilities
-open Hand
-open Tile
 
 
 type Direction =
