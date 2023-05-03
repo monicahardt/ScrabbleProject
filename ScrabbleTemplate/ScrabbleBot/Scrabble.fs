@@ -90,7 +90,7 @@ module Scrabble =
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err ->
-                List.fold(fun acc thisError -> 
+                List.fold(fun _ thisError -> 
                     match thisError with
                     |GPENotEnoughPieces(_,piecesLeft) ->
                         if (int (piecesLeft) > 0) then send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) 
