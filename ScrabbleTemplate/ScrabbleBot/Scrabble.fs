@@ -31,27 +31,28 @@ module Scrabble =
     open MoveUtilities
 
     let playGame cstream pieces (st : State.state) =
-        let rec aux (st : State.state) =
-            debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
-            Print.printHand pieces (State.hand st)
+        let rec aux (st : State.state) (isMyTurn : bool) =
+            if (isMyTurn) then
+                debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
+                Print.printHand pieces (State.hand st)
 
-            let result = getNextMoveToPlay st pieces
-            let resultArray = Map.toArray result
+                let result = getNextMoveToPlay st pieces
+                let resultArray = Map.toArray result
 
-            if resultArray.Length > 0 then 
-                let longestFoundWord = 
-                    Array.fold(fun (acc: uint32 list) ((word: uint32 list),_) -> 
-                    if word.Length >= acc.Length then word else acc ) [] resultArray
-                let coordsToWord = result.[longestFoundWord]
+                if resultArray.Length > 0 then 
+                    let longestFoundWord = 
+                        Array.fold(fun (acc: uint32 list) ((word: uint32 list),_) -> 
+                        if word.Length >= acc.Length then word else acc ) [] resultArray
+                    let coordsToWord = result.[longestFoundWord]
 
-                if st.occupiedSquares.IsEmpty then //the first word we play, so we want all the tiles 
-                    let move = makeMove longestFoundWord pieces coordsToWord
-                    send cstream (SMPlay move)
-                else //we play out from a tile that is already placed on the board, so we ignore [0]
-                    let move = makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
-                    send cstream (SMPlay move)
-            else //we couldn't make any valid moves with our hands -> swap tiles
-                send cstream (SMChange (getHandAsList st.hand))
+                    if st.occupiedSquares.IsEmpty then //the first word we play, so we want all the tiles 
+                        let move = makeMove longestFoundWord pieces coordsToWord
+                        send cstream (SMPlay move)
+                    else //we play out from a tile that is already placed on the board, so we ignore [0]
+                        let move = makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
+                        send cstream (SMPlay move)
+                else //we couldn't make any valid moves with our hands -> swap tiles
+                    send cstream (SMChange (getHandAsList st.hand))
 
             let msg = recv cstream
             
@@ -63,19 +64,19 @@ module Scrabble =
                     removeTilesFromHand st ms |>
                     addNewTiles newPieces |>           
                     updateOccSquares ms
-                aux st'
+                aux st' false
             | RCM (CMChangeSuccess (newPieces)) ->
                 let st' = changeHand newPieces st
-                aux st'
+                aux st' false
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
-                let st' = st // This state needs to be updated
-                aux st'
+                let st' = st |> updateOccSquares ms // This state needs to be updated
+                aux st' (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMPlayFailed (pid, ms)) ->
                 (* Failed play. Update your state *)
-                let st' = st // This state needs to be updated
-                aux st'
-            | RCM (CMPassed _) -> aux st
+                let st' = st |> updateOccSquares ms // This state needs to be updated
+                aux st' (pid % st.numPlayers + 1u = st.playerNumber)
+            | RCM (CMPassed pid) -> aux st (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err ->
@@ -83,13 +84,16 @@ module Scrabble =
                     match thisError with
                     |GPENotEnoughPieces(_,piecesLeft) ->
                         if (int (piecesLeft) > 0) then 
-                            send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) ; aux st
-                        else send cstream (SMPass); aux st
+                            send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) ; aux st false
+                        else send cstream (SMPass); aux st false
                     |_ ->
-                        printfn "Gameplay Error:\n%A" err; aux st
+                        printfn "Gameplay Error:\n%A" err; aux st false
                 ) () err
 
-        aux st
+        if (st.playerTurn = st.playerNumber) then
+            aux st true
+        else 
+            aux st false
   
     let startGame 
             (boardP : boardProg) 
@@ -115,7 +119,7 @@ module Scrabble =
                   
         let handSet = List.fold (fun acc (x, k) -> add x k acc) empty hand
     
-        fun () -> playGame cstream tiles (mkState board dict playerNumber handSet)
+        fun () -> playGame cstream tiles (mkState board dict numPlayers playerNumber playerTurn handSet)
       
         
  

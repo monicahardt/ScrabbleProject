@@ -15,17 +15,21 @@ open MultiSet
     type state = {
         board         : Parser.board
         dict          : Dictionary.Dict
+        numPlayers : uint32
         playerNumber  : uint32
+        playerTurn :uint32
         hand          : MultiSet.MultiSet<uint32>
         occupiedSquares : Map<coord, (uint32 * (char*int))> //mapping a coordinate to a tuple of (id * tile)
     }
 
-    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h; 
-                occupiedSquares = Map.empty<coord, uint32 * (char*int)>}
+    let mkState b d np pn pt h = {board = b; dict = d; numPlayers = np;  playerNumber = pn; playerTurn = pt; hand = h; 
+                occupiedSquares = Map.empty<coord, uint32 * (char*int)>;}
                
     let board st            = st.board
     let dict st             = st.dict
+    let numPlayers st = st.numPlayers
     let playerNumber st     = st.playerNumber
+    let playerTurn st = st.playerTurn
     let hand st             = st.hand
     let occupiedSquares st  = st.occupiedSquares
 
