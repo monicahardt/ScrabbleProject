@@ -93,7 +93,9 @@ module Scrabble =
                 List.fold(fun _ thisError -> 
                     match thisError with
                     |GPENotEnoughPieces(_,piecesLeft) ->
-                        if (int (piecesLeft) > 0) then send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) 
+                        if (int (piecesLeft) > 0) then 
+                            debugPrint "\n*** WE'RE SWAPPING TOO MANY PIECES ***\n"
+                            send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) 
                         else send cstream SMPass
                     |_ ->
                         printfn "Gameplay Error:\n%A" err; aux st
