@@ -94,7 +94,7 @@ module Scrabble =
                     match thisError with
                     |GPENotEnoughPieces(_,piecesLeft) ->
                         if (int (piecesLeft) > 0) then 
-                            debugPrint "\n*** WE'RE SWAPPING TOO MANY PIECES ***\n"
+                            forcePrint "\n*** WE'RE SWAPPING TOO MANY PIECES ***\n"
                             send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) 
                         else send cstream SMPass
                     |_ ->
