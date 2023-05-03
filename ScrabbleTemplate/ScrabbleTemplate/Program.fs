@@ -40,7 +40,7 @@ let main argv =
     // To run, navigate to ScrabbleProject and run the following cmd:
     // dotnet run --project ScrabbleTemplate/ScrabbleTemplate
 
-    let handSize   = 7u
+    let handSize   = 10u
     let timeout    = None
     let tiles      = ScrabbleUtil.English.tiles 1u
     let seed       = None
@@ -48,7 +48,7 @@ let main argv =
 
     let dictAPI =
         //Uncomment if you have implemented a dictionary. last element None if you have not implemented a GADDAG
-        Some (Dictionary.empty, Dictionary.insert, Dictionary.step, None) 
+        Some (Dictionary.Empty, Dictionary.insert, Dictionary.step, None) 
  
     // Uncomment this line to call your client
     let (dictionary, time) =

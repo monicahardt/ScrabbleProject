@@ -8,7 +8,7 @@ type Dict =
     |Leaf of bool
     |Node of bool * System.Collections.Generic.Dictionary<char, Dict>
     
-let empty () = Leaf false
+let Empty () = Leaf false
 
 
 //OLD BUT WORKS! NOT WITH GADDAG THOUGH
@@ -55,7 +55,7 @@ let rec insert (s: string) (dict: Dict) =
     |Leaf b -> //do we need the boolean?
         //printfn "Leaf string is not done"
         let newDict = Dictionary<char,Dict>()
-        newDict.Add(s.[0],insert s.[1..] (empty()))
+        newDict.Add(s.[0],insert s.[1..] (Empty()))
         Node(b, newDict) 
         
     //if the dict is a node and the length of the string is more than 0
@@ -72,7 +72,7 @@ let rec insert (s: string) (dict: Dict) =
         //the dictionary did not have the key so we add it to make a new "way" down the trie
         |(false,_) ->
             //printfn "Inserting the new key"
-            d.Add(s.[0],insert s.[1..] (empty()))
+            d.Add(s.[0],insert s.[1..] (Empty()))
             Node(b, d)
 
    
