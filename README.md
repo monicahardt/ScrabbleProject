@@ -2,7 +2,7 @@
 
 ## Preface
 
-This project is developed in spring 2023, as a part of a mandatory assignment in the course Functional Programming, taught by prof. Jesper Bengtson and Patrick Bahr. Authors of this project are Monica Hardt (monha@itu.dk), Selma Bernhild (selb@itu.dk) & Rakul Maria H. Tórgarð (rakt@itu.dk).
+This project is developed in spring 2023, as a part of a mandatory assignment in the course Functional Programming, taught by prof. Jesper Bengtson and Patrick Bahr. Authors of this project are Monica Hardt (monha@itu.dk), Selma Bernild (selb@itu.dk) & Rakul Maria H. Tórgarð (rakt@itu.dk).
 
 The outcome of the project is to develop a ScrabbleBot, that can find and play valid scrabble moves. The project is left open, giving the developers the opportunity to aim for their level of amibition.
 
