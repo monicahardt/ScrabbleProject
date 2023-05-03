@@ -266,7 +266,7 @@ let validateWordsFound (st: State.state) (pieces: Map<uint32, tile>) (wordsFound
                 ) ([], []) wordsFound
 
 let rec stepToRest (st: State.state) (hand: MultiSet<uint32>) (dict: Dict) (wordToBuild: uint32 list) (pieces: Map<uint32, tile>) (outerAcc: uint32 list list) (pos: coord)= 
-        MultiSet.fold(fun acc id numOf -> 
+        fold(fun acc id numOf -> 
             let word = wordToBuild
             match nextDict dict id pieces with 
             |Some(b,d) -> //there was a path
