@@ -61,7 +61,9 @@ module Scrabble =
             else 
                 debugPrint "\nWE COULD NOT PLACE A WORD SWAPPING TILES\n"
                 send cstream (SMChange (getHandAsList st.hand))
-                
+            
+            //send cstream SMPass
+
             let msg = recv cstream
             //debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             
@@ -87,15 +89,17 @@ module Scrabble =
                 (* Failed play. Update your state *)
                 let st' = st // This state needs to be updated
                 aux st'
+            | RCM (CMPassed _) -> aux st
             | RCM (CMGameOver _) -> ()
+            //| RCM (CMPassed _) -> failwith (sprintf )
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err ->
                 List.fold(fun _ thisError -> 
                     match thisError with
                     |GPENotEnoughPieces(_,piecesLeft) ->
                         if (int (piecesLeft) > 0) then 
-                            send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) 
-                        else send cstream SMPass
+                            send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) ; aux st
+                        else send cstream (SMPass); aux st
                     |_ ->
                         printfn "Gameplay Error:\n%A" err; aux st
                 ) () err
