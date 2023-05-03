@@ -89,16 +89,9 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                                         match roomToRight st downCoord with
                                                         |true -> 
                                                             debugPrint (sprintf "There was room right from the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
-                                                            let downDownCoord = (((fst downCoord)), (snd downCoord) + 1)
-                                                            match roomDown st downDownCoord with
-                                                            |true -> 
-                                                                debugPrint (sprintf "There was room down from to the coord: x: %d y: %d \n" (fst downDownCoord) (snd downDownCoord))//check one more time if there is space to down
-                                                                //we can place tile downwards
-                                                                debugPrint "\nThe tile could be placed down\n"
-                                                                placeCharOnBoard (i+1) startArr arr.[1..] downCoord downCoord (true, Vertical) false true
-                                                            |false -> 
-                                                                debugPrint (sprintf "There was not room downdown to the coord: x: %d y: %d \n" (fst downDownCoord) (snd downDownCoord))//check one more time if there is space to down
-                                                                (false, Vertical) //we could not play down
+                                                            //we can place tile downwards
+                                                            debugPrint "\nThe tile could be placed down\n"
+                                                            placeCharOnBoard (i+1) startArr arr.[1..] downCoord downCoord (true, Vertical) false true
                                                         |false -> 
                                                             debugPrint (sprintf "There was not room right to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
                                                             (false, Vertical) //we could not play down
@@ -112,9 +105,9 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                     debugPrint (sprintf "There was not room down from the coord: x: %d y: %d \n" (fst pos) (snd pos))//check one more time if there is space to down
                                     (false, Vertical)
                 else 
-                    match roomUp st startPos with 
+                    match roomUp st pos with 
                         |true -> 
-                                debugPrint (sprintf "There was room up from the coord: x: %d y: %d \n" (fst startPos) (snd startPos))//there was room up so we want to play down (vertically)
+                                debugPrint (sprintf "There was room up from the coord: x: %d y: %d \n" (fst pos) (snd pos))//there was room up so we want to play down (vertically)
                                 match roomDown st pos with 
                                 |true -> //there was room down so we want to check the left and right from the down space
                                         debugPrint (sprintf "There was room down from the coord: x: %d y: %d \n" (fst pos) (snd pos))
@@ -128,15 +121,8 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                                         match roomToRight st downCoord with
                                                         |true -> //we can place tile downwards
                                                             debugPrint (sprintf "There was room right to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
-                                                            let downDownCoord = (((fst downCoord)), (snd downCoord) + 1)
-                                                            match roomDown st downDownCoord with
-                                                            |true -> 
-                                                                debugPrint (sprintf "There was room down from to the coord: x: %d y: %d \n" (fst downDownCoord) (snd downDownCoord))//check one more time if there is space to down
-                                                                debugPrint "\nThe tile could be placed down\n"
-                                                                placeCharOnBoard (i+1) startArr arr.[1..] downCoord downCoord (true, Vertical) false true
-                                                            |false -> 
-                                                                debugPrint (sprintf "There was not room downdown to the coord: x: %d y: %d \n" (fst downDownCoord) (snd downDownCoord))//check one more time if there is space to down
-                                                                (false, Vertical) //we could not play down
+                                                            debugPrint "\nThe tile could be placed down\n"
+                                                            placeCharOnBoard (i+1) startArr arr.[1..] downCoord downCoord (true, Vertical) false true
                                                         |false -> 
                                                             debugPrint (sprintf "There was not room right to the coord: x: %d y: %d \n" (fst downCoord) (snd downCoord))//check one more time if there is space to down
                                                             (false, Vertical) //we could not play down
@@ -168,37 +154,30 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                         |true ->
                                             debugPrint (sprintf "There was room down from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//check one more time if there is space to down
                                             match roomToRight st rightCoord with
-                                            |true -> //we can place tile to the right
-                                                debugPrint (sprintf "There was room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))
-                                                let rightRightCoord = (((fst rightCoord) + 1), (snd rightCoord))
-                                                match roomToRight st rightRightCoord with
-                                                |true -> 
-                                                    debugPrint (sprintf "There was room right from the coord: x: %d y: %d \n" (fst rightRightCoord) (snd rightRightCoord))//check one more time if there is space to down
-                                                    debugPrint "\nThe tile could be placed to the right\n"
-                                                    placeCharOnBoard (i+1) startArr arr.[1..] startPos rightCoord (true, Horizontal) true false
-                                                |false ->
-                                                    debugPrint (sprintf "There was not room to the right of to the coord: x: %d y: %d \n" (fst rightRightCoord) (snd rightRightCoord))//check one more time if there is space to down
-                                                    placeCharOnBoard (i+1) startArr startArr startPos startPos (false, Vertical) false false
+                                            |true -> //we can place tile to the right  
+                                                debugPrint (sprintf "There was room right from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//check one more time if there is space to down
+                                                debugPrint "\nThe tile could be placed to the right\n"
+                                                placeCharOnBoard (i+1) startArr arr.[1..] startPos rightCoord (true, Horizontal) true false
                                             |false -> 
                                                 debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
                                                 //(false, Horizontal) //we could not play right
                                                 //checkIfDownIsPossible st pos acc
-                                                placeCharOnBoard (i+1) startArr startArr startPos pos (false, Vertical) false false
+                                                placeCharOnBoard (i+1) startArr startArr startPos startPos (false, Vertical) false false
                                         |false -> 
                                             debugPrint (sprintf "There was not room down from the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
                                             //(false, Horizontal)
                                             //checkIfDownIsPossible st pos acc 
-                                            placeCharOnBoard (i+1) startArr startArr startPos pos (false, Vertical) false false
+                                            placeCharOnBoard (i+1) startArr startArr startPos startPos (false, Vertical) false false
                                     |false -> 
                                         debugPrint (sprintf "There was not room up the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
                                         //(false, Horizontal)
                                         //checkIfDownIsPossible st pos acc 
-                                        placeCharOnBoard (i+1) startArr startArr startPos pos (false, Vertical) false false
+                                        placeCharOnBoard (i+1) startArr startArr startPos startPos (false, Vertical) false false
                             |false ->  
                                 debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst pos) (snd pos))//there was room up from the right coord
                                 //(false, Horizontal)
                                 //checkIfDownIsPossible st pos acc
-                                placeCharOnBoard (i+1) startArr startArr startPos pos (false, Vertical) false false
+                                placeCharOnBoard (i+1) startArr startArr startPos startPos (false, Vertical) false false
 
 
                 else
@@ -218,15 +197,8 @@ let validateWordWithBoard (word: uint32 list) (startPos: coord) (pieces: Map<uin
                                             match roomToRight st rightCoord with
                                             |true -> //we can place tile to the right
                                                 debugPrint (sprintf "There was room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))
-                                                let rightRightCoord = (((fst rightCoord) + 1), (snd rightCoord))
-                                                match roomToRight st rightRightCoord with
-                                                |true -> 
-                                                    debugPrint (sprintf "There was room right from the coord: x: %d y: %d \n" (fst rightRightCoord) (snd rightRightCoord))//there was room up from the right coord
-                                                    debugPrint "\nThe tile could be placed to the right\n"
-                                                    placeCharOnBoard (i+1) startArr arr.[1..] startPos rightCoord (true, Horizontal) true false
-                                                |false ->
-                                                    debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst rightRightCoord) (snd rightRightCoord))//there was room up from the right coord
-                                                    placeCharOnBoard (i+1)  startArr startArr startPos startPos (false, Vertical) false false
+                                                debugPrint "\nThe tile could be placed to the right\n"
+                                                placeCharOnBoard (i+1) startArr arr.[1..] startPos rightCoord (true, Horizontal) true false
                                             |false -> 
                                                 debugPrint (sprintf "There was not room to the right of the coord: x: %d y: %d \n" (fst rightCoord) (snd rightCoord))//there was room up from the right coord
                                                 //(false, Horizontal) //we could not play right
