@@ -85,7 +85,6 @@ module internal StateMonad
         |_ when s.vars.[0].ContainsKey x -> Failure (VarExists x)
         |_ -> Success((), {s with vars = Map [x,0] :: s.vars}))
         
-        
     let update (x: string) (v:int) : SM<unit> =
         let rec aux (sVars: Map<string,int> list) (index: int) =
             match sVars with

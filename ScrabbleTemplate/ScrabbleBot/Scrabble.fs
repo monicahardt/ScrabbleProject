@@ -9,10 +9,9 @@ open ScrabbleUtil.DebugPrint
 open State
 
  module Print =
-
     let printHand (pieces: Map<uint32,tile>) hand =
         hand |>
-        MultiSet.fold (fun _ x i -> forcePrint (sprintf "%d -> (%A, %d)\n" x (Map.find x pieces) i)) ()
+        fold (fun _ x i -> forcePrint (sprintf "%d -> (%A, %d)\n" x (Map.find x pieces) i)) ()
     
     let printHandSize (hand: MultiSet<uint32>) = forcePrint ((size hand).ToString())
     
@@ -28,44 +27,33 @@ type Direction =
 
 
 module Scrabble =
-    open System.Threading
     open Moves
     open MoveUtilities
 
     let playGame cstream pieces (st : State.state) =
-
         let rec aux (st : State.state) =
             debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
             Print.printHand pieces (State.hand st)
 
-            //test pieces st
             let result = getNextMoveToPlay st pieces
-            
             let resultArray = Map.toArray result
-            if resultArray.Length > 0 then
-                let longestFoundWord = Array.fold(fun (acc: uint32 list) ((word: uint32 list),(coords: coord list))-> if word.Length >= acc.Length then word else acc ) [] resultArray
+
+            if resultArray.Length > 0 then 
+                let longestFoundWord = 
+                    Array.fold(fun (acc: uint32 list) ((word: uint32 list),_) -> 
+                    if word.Length >= acc.Length then word else acc ) [] resultArray
                 let coordsToWord = result.[longestFoundWord]
 
-                if st.occupiedSquares.IsEmpty then
-                    //debugPrint "\noccupied squares was empty\n"
+                if st.occupiedSquares.IsEmpty then //the first word we play, so we want all the tiles 
                     let move = makeMove longestFoundWord pieces coordsToWord
-                    //debugPrint "\nMADE THE MOVE\n"
                     send cstream (SMPlay move)
-                else 
-                    //debugPrint "\noccupied squares was not empty\n"
-                    let word =  makeAWord (longestFoundWord) pieces
-                    debugPrint (sprintf "\nTHE WORD WE ARE PLAYING IS: %s\n" word)
+                else //we play out from a tile that is already placed on the board, so we ignore [0]
                     let move = makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
-                    //debugPrint "\nMADE THE MOVE NOT FIRST\n"
                     send cstream (SMPlay move)
-            else 
-                debugPrint "\nWE COULD NOT PLACE A WORD SWAPPING TILES\n"
+            else //we couldn't make any valid moves with our hands -> swap tiles
                 send cstream (SMChange (getHandAsList st.hand))
-            
-            //send cstream SMPass
 
             let msg = recv cstream
-            //debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             
             match msg with
             
@@ -75,9 +63,7 @@ module Scrabble =
                     removeTilesFromHand st ms |>
                     addNewTiles newPieces |>           
                     updateOccSquares ms
-                
                 aux st'
-
             | RCM (CMChangeSuccess (newPieces)) ->
                 let st' = changeHand newPieces st
                 aux st'
@@ -91,7 +77,6 @@ module Scrabble =
                 aux st'
             | RCM (CMPassed _) -> aux st
             | RCM (CMGameOver _) -> ()
-            //| RCM (CMPassed _) -> failwith (sprintf )
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err ->
                 List.fold(fun _ thisError -> 
@@ -128,9 +113,9 @@ module Scrabble =
         let dict = dictf false // Uncomment if using a trie for your dictionary
         let board = Parser.mkBoard boardP
                   
-        let handSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty hand
+        let handSet = List.fold (fun acc (x, k) -> add x k acc) empty hand
     
-        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet)
+        fun () -> playGame cstream tiles (mkState board dict playerNumber handSet)
       
         
  

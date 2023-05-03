@@ -1,5 +1,4 @@
 ﻿// Learn more about F# at http://fsharp.org
-
 let time f =
     let start = System.DateTime.Now
     let res = f ()
@@ -40,7 +39,7 @@ let main argv =
     // To run, navigate to ScrabbleProject and run the following cmd:
     // dotnet run --project ScrabbleTemplate/ScrabbleTemplate
 
-    let handSize   = 10u
+    let handSize   = 7u
     let timeout    = None
     let tiles      = ScrabbleUtil.English.tiles 1u
     let seed       = None

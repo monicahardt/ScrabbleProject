@@ -1,5 +1,5 @@
 ﻿// Insert your MultiSet.fs file here. All modules must be internal
-//Implementation file
+// Implementation file
 
 module internal MultiSet
  
@@ -54,7 +54,7 @@ module internal MultiSet
             let numOfItemIn2 = numItems x (Multi s2) //if the item is now in the second then that just returns 0
             add x (numOfItemIn2 + y) acc)
         
-    let subtract (Multi s1) (Multi s2) =  fold (fun acc x y -> remove x y acc) (Multi s1) (Multi s2)
+    let subtract (Multi s1) (Multi s2) = fold (fun acc x y -> remove x y acc) (Multi s1) (Multi s2)
     
    
     let intersection (Multi s1) (Multi s2) = (empty, (Multi s1)) ||> fold(fun acc x y ->
