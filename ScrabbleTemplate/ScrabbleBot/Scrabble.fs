@@ -58,6 +58,10 @@ module Scrabble =
             
             match msg with
             
+            | RCM (CMPlayed (pid, ms, points)) ->
+                (* Successful play by other player. Update your state *)
+                let st' = st |> updateOccSquares ms |> addPlayers pid st.setOfPlayers // This state needs to be updated
+                aux st' (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
                 let st' =
@@ -65,27 +69,30 @@ module Scrabble =
                     addNewTiles newPieces |>           
                     updateOccSquares ms
                 aux st' false
-            | RCM (CMChangeSuccess (newPieces)) ->
-                let st' = changeHand newPieces st
-                aux st' false
-            | RCM (CMPlayed (pid, ms, points)) ->
-                (* Successful play by other player. Update your state *)
-                let st' = st |> updateOccSquares ms // This state needs to be updated
-                aux st' (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMPlayFailed (pid, ms)) ->
                 (* Failed play. Update your state *)
                 let st' = st |> updateOccSquares ms // This state needs to be updated
                 aux st' (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMPassed pid) -> aux st (pid % st.numPlayers + 1u = st.playerNumber)
+            | RCM (CMForfeit pid) -> 
+                let st' = st |> removePlayers pid st.setOfPlayers
+                aux st' (pid % st.numPlayers + 1u = st.playerNumber)
+            | RCM (CMChange (pid, ms)) -> aux st (pid % st.numPlayers + 1u = st.playerNumber)
+            | RCM (CMChangeSuccess (newPieces)) ->
+                let st' = changeHand newPieces st
+                aux st' false
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err ->
                 List.fold(fun _ thisError -> 
                     match thisError with
                     |GPENotEnoughPieces(_,piecesLeft) ->
+                        forcePrint (sprintf "FORFIETED")
                         if (int (piecesLeft) > 0) then 
-                            send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) ; aux st false
-                        else send cstream (SMPass); aux st false
+                            //send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)]))
+                            //send cstream (SMPass)
+                            send cstream (SMForfeit) ; aux st false
+                        else send cstream (SMForfeit) ; aux st false
                     |_ ->
                         printfn "Gameplay Error:\n%A" err; aux st false
                 ) () err
