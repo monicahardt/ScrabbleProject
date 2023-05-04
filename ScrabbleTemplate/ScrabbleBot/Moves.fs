@@ -286,7 +286,9 @@ let rec stepToRest (st: State.state) (hand: MultiSet<uint32>) (dict: Dict) (word
 //Should generate a list of valid moves
 let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direction: Direction)  = 
     //let currentHand = st.hand //our current hand
-    let currentHand = if contains 0u st.hand then removeSingle 0u st.hand else st.hand
+    //let wildcard = Seq.head (pieces.[0u])
+    (*if contains 0u st.hand then removeSingle 0u st.hand else*)
+    let currentHand = st.hand
     let handList = getHandAsList st.hand
     let currentDict = st.dict
 
@@ -306,7 +308,8 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
 
             match firstStep with 
             |Some(b,d) -> 
-                let myHand = if handList.[i] = 0u then removeSingle 0u currentHand else removeSingle nowChar currentHand
+                (*if handList.[i] = 0u then removeSingle 0u currentHand else*)
+                let myHand = removeSingle nowChar currentHand
                 let wordsInListOfList = stepToRest st myHand d [nowChar] pieces [] startPos
                 let (word, coords) = validateWordsFound st pieces wordsInListOfList startPos
                 debugPrint (sprintf "\nThe size of the list of long words: %d\n" word.Length)
@@ -322,7 +325,8 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
 
 let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direction: Direction)  = 
     //let currentHand = st.hand //our current hand
-    let currentHand = if contains 0u st.hand then removeSingle 0u st.hand else st.hand
+    (*if contains 0u st.hand then removeSingle 0u st.hand else*)
+    let currentHand = st.hand
     let currentDict = st.dict
     let allOccupiedSqaures = st.occupiedSquares
     let occSquaresList = Map.toList allOccupiedSqaures 
