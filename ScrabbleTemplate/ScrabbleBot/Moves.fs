@@ -255,7 +255,7 @@ let validateWordsFound (st: State.state) (pieces: Map<uint32, tile>) (wordsFound
                         //it was not possible to place the word on the board
                         acc
                       
-                    |_ -> //it was possible so we check if this word is longer than the current longest word *)
+                    |_ -> //it was possible so we check if this word is longer than the current longest word
                         if word.Length > (fst acc).Length then 
                             ((List.rev word), possibleCoords) 
                         else 
@@ -266,8 +266,7 @@ let validateWordsFound (st: State.state) (pieces: Map<uint32, tile>) (wordsFound
                 ) ([], []) wordsFound
 
 let rec stepToRest (st: State.state) (hand: MultiSet<uint32>) (dict: Dict) (wordToBuild: uint32 list) (pieces: Map<uint32, tile>) (outerAcc: uint32 list list) (pos: coord)= 
-        fold(fun acc id numOf -> 
-            let word = wordToBuild
+        fold(fun acc id _ -> 
             match nextDict dict id pieces with 
             |Some(b,d) -> //there was a path
                 let updatedWord = id :: wordToBuild
@@ -282,12 +281,8 @@ let rec stepToRest (st: State.state) (hand: MultiSet<uint32>) (dict: Dict) (word
         ) outerAcc hand
 
                 
-//This is the function mentioned by Jesper
 //Should generate a list of valid moves
 let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direction: Direction)  = 
-    //let currentHand = st.hand //our current hand
-    //let wildcard = Seq.head (pieces.[0u])
-    (*if contains 0u st.hand then removeSingle 0u st.hand else*)
     let currentHand = st.hand
     let handList = getHandAsList st.hand
     let currentDict = st.dict
@@ -308,7 +303,6 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
 
             match firstStep with 
             |Some(b,d) -> 
-                (*if handList.[i] = 0u then removeSingle 0u currentHand else*)
                 let myHand = removeSingle nowChar currentHand
                 let wordsInListOfList = stepToRest st myHand d [nowChar] pieces [] startPos
                 let (word, coords) = validateWordsFound st pieces wordsInListOfList startPos
@@ -324,8 +318,6 @@ let first (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direc
                                    
 
 let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (direction: Direction)  = 
-    //let currentHand = st.hand //our current hand
-    (*if contains 0u st.hand then removeSingle 0u st.hand else*)
     let currentHand = st.hand
     let currentDict = st.dict
     let allOccupiedSqaures = st.occupiedSquares
@@ -338,18 +330,13 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
         then 
             acc 
         else 
-            let nowChar = if (fst(snd occSquaresList.[i])) = 0u then 
-                                //debugPrint "WE GOT A WILDCARD SOMETHING GOES WRONG1"
-                                1u else (fst(snd occSquaresList.[i]))
-
-            //debugPrint (sprintf "THE CHAR ON THE BOARD WE ARE LOOKING AT IS: %c \n" (getCharFromId pieces nowChar))
+            let nowChar = if (fst(snd occSquaresList.[i])) = 0u then 1u else (fst(snd occSquaresList.[i]))
             let newStartCoord = fst occSquaresList.[i] 
             let firstStep = nextDict currentDict nowChar pieces
             match firstStep with 
             |Some(b,d) -> 
                 let wordsInListOfList = stepToRest st currentHand d [nowChar] pieces [] newStartCoord
                 let (word, coords) = validateWordsFound st pieces wordsInListOfList newStartCoord
-                //let (word, coords) = firstAux st currentHand d direction newStartCoord [nowChar] [nowChar] [] pieces
                 //if the word is an empty list we cannot make a word with this tile already on the board
                 if word.IsEmpty then 
                     //we could not make a word with this tile on the board
@@ -365,16 +352,6 @@ let second (st: State.state) (pieces: Map<uint32, tile>) (startPos: coord) (dire
 
             |None -> failwith "what went wrong"
     let resultMap = result 0 Map.empty []
-
-    debugPrint "\nTHE FIRST WORDS FROM EACH LETTER IN HAND WE CAN PLAY ARE\n"
-   
-    Map.fold(fun acc k v -> 
-                        debugPrint "\n**WORD**\n"
-                        List.iter(fun letter -> debugPrint (sprintf "%c \n" (getCharFromId pieces letter))) k
-                        debugPrint "\n**Coord**\n"
-                        List.iter(fun coord -> debugPrint (sprintf "x: %d y: %d \n" (fst coord) (snd coord))) v
-                     
-    )() resultMap
     resultMap                                    
                
 
