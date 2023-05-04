@@ -1,4 +1,4 @@
-﻿namespace hej
+﻿namespace masterOfTheUniverse
 
 module Scrabble =
 
