@@ -32,7 +32,6 @@ module Scrabble =
 
     let playGame cstream pieces (st : State.state) =
         let rec aux (st : State.state) =
-            debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
             Print.printHand pieces (State.hand st)
 
             let result = getNextMoveToPlay st pieces
