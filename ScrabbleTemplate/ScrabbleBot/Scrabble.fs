@@ -33,7 +33,7 @@ module Scrabble =
     let playGame cstream pieces (st : State.state) =
         let rec aux (st : State.state) (isMyTurn : bool) =
             if (isMyTurn) then
-                debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
+                //debugPrint "\n AUX WAS CALLED NEW ROUND \n" 
                 Print.printHand pieces (State.hand st)
 
                 let result = getNextMoveToPlay st pieces
@@ -52,7 +52,8 @@ module Scrabble =
                         let move = makeMove longestFoundWord.[1..] pieces coordsToWord.[1..]
                         send cstream (SMPlay move)
                 else //we couldn't make any valid moves with our hands -> swap tiles
-                    send cstream (SMChange (getHandAsList st.hand))
+                    //send cstream (SMChange (getHandAsList st.hand))
+                    send cstream (SMForfeit)
 
             let msg = recv cstream
             
@@ -61,6 +62,7 @@ module Scrabble =
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
                 let st' = st |> updateOccSquares ms |> addPlayers pid st.setOfPlayers // This state needs to be updated
+                debugPrint (sprintf "\n Number of players in playerSet when added: %d with id: %d \n" st'.setOfPlayers.Count (int pid))
                 aux st' (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
@@ -75,8 +77,14 @@ module Scrabble =
                 aux st' (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMPassed pid) -> aux st (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMForfeit pid) -> 
+                let arrayOfPlayers = Set.toArray st.setOfPlayers
+                let indexOfForfeit = Array.findIndex (fun e -> e = pid) arrayOfPlayers
+                debugPrint (sprintf "\n Forfeited index: %d\n" indexOfForfeit)
                 let st' = st |> removePlayers pid st.setOfPlayers
-                aux st' (pid % st.numPlayers + 1u = st.playerNumber)
+                debugPrint (sprintf "\n Number of players in playerSet when removed: %d with id: %d \n" (int st'.setOfPlayers.Count) (int pid))
+                debugPrint (sprintf "\n Next to play index: %d\n" (Array.findIndex (fun e -> e = st.playerNumber) (Set.toArray st'.setOfPlayers)))
+                if (pid = st.setOfPlayers.MaximumElement) then aux st' (0 = Array.findIndex (fun e -> e = st.playerNumber) (Set.toArray st'.setOfPlayers))
+                else aux st' (indexOfForfeit = Array.findIndex (fun e -> e = st.playerNumber) (Set.toArray st'.setOfPlayers))
             | RCM (CMChange (pid, ms)) -> aux st (pid % st.numPlayers + 1u = st.playerNumber)
             | RCM (CMChangeSuccess (newPieces)) ->
                 let st' = changeHand newPieces st
@@ -87,12 +95,9 @@ module Scrabble =
                 List.fold(fun _ thisError -> 
                     match thisError with
                     |GPENotEnoughPieces(_,piecesLeft) ->
-                        forcePrint (sprintf "FORFIETED")
                         if (int (piecesLeft) > 0) then 
-                            //send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)]))
-                            //send cstream (SMPass)
-                            send cstream (SMForfeit) ; aux st false
-                        else send cstream (SMForfeit) ; aux st false
+                            send cstream (SMChange((getHandAsList st.hand).[0..(int piecesLeft)])) ; aux st false
+                        else send cstream (SMPass) ; aux st false
                     |_ ->
                         printfn "Gameplay Error:\n%A" err; aux st false
                 ) () err
