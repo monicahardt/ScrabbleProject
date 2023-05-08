@@ -34,8 +34,8 @@ let main argv =
 //    let board      = ScrabbleUtil.HoleBoard.holeBoard ()
 //    let board      = ScrabbleUtil.InfiniteHoleBoard.infiniteHoleBoard ()
 
-    //let words     = readLines "../../../Dictionaries/English.txt" //RIDER VERSION
-    let words     = readLines "ScrabbleTemplate/ScrabbleTemplate/Dictionaries/English.txt" // VSCODE 
+    let words     = readLines "../../../Dictionaries/English.txt" //RIDER VERSION
+    //let words     = readLines "ScrabbleTemplate/ScrabbleTemplate/Dictionaries/English.txt" // VSCODE 
     // To run, navigate to ScrabbleProject and run the following cmd:
     // dotnet run --project ScrabbleTemplate/ScrabbleTemplate
 
