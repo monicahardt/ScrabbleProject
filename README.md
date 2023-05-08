@@ -16,3 +16,9 @@ The outcome of the project is to develop a ScrabbleBot, that can find and play v
   - Checks *every* letter on the board (doesn't use anchorpoints)
 
 Arguing that the final points should be 2 points.
+
+## Running
+
+To run the program, open the terminal in the root folder, ScrabbleProject, and run the following cmd:
+
+    dotnet run --project ScrabbleTemplate/ScrabbleTemplate
