@@ -19,6 +19,13 @@ Arguing that the final points should be 2 points.
 
 ## Running
 
-To run the program, open the terminal in the root folder, ScrabbleProject, and run the following cmd:
+To run the program, open the project in Rider and run the selected configuration.
+
+If you prefer running the program through the terminal, you will have to set the correct filepath to the directory.
+
+- Go to the Program.fs file and navigate to line 37-40
+- Uncomment the ```let words = ...``` line for the terminal (remember to comment the previous line)  
+
+Now you can run the program through the terminal. Navigate to the root folder, ScrabbleProject, and run the following cmd:
 
     dotnet run --project ScrabbleTemplate/ScrabbleTemplate
